@@ -17,6 +17,10 @@ Legend — Effort: `S` ≤1 day · `M` a few days · `L` ~1–2 weeks · `XL` 3+
   standing stones), **stamina/posture** with guard-break, **hit-stop**,
   **ranged gunner enemies + projectiles**, **central balance config**, **pause
   menu + quality presets**, **GitHub Pages deploy workflow**.
+- **v0.3 "Arsenal"** — **inventory system**, dual-slot **weapon variety**
+  (pistol/revolver/SMG/shotgun, katana/greatsword/whip) with swapping, **enemy
+  loot drops + pickups**, **ink-drop currency**, **consumables** (heal / posture),
+  and a loadout HUD strip.
 
 ---
 

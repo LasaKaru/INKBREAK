@@ -86,6 +86,7 @@ export class Enemy {
     this.ctx.hitStop(Balance.feel.hitStopHeavy);
     this.ctx.hud.floatText(this.center(), `<span class="b">[erased]</span>`, true);
     this.ctx.onDestruction(Balance.prison.perKill);
+    this.ctx.spawnLoot(this.pos.clone());
   }
 
   update(dt: number, t: number, playerPos: THREE.Vector3, playerBlocking: boolean) {

@@ -8,6 +8,7 @@ import { VoidSmoke } from "./VoidSmoke";
 import { Player } from "./Player";
 import { EnemyManager } from "./EnemyManager";
 import { Projectiles } from "./Projectiles";
+import { Pickups } from "./Pickups";
 import { Balance } from "./balance";
 import { HUD } from "../ui/HUD";
 import { Audio } from "../audio/Audio";
@@ -38,12 +39,14 @@ export class Game {
   private player: Player;
   private enemies: EnemyManager;
   private projectiles: Projectiles;
+  private pickups!: Pickups;
   private ctx: GameContext;
 
   private prisonIntegrity = 100;
   private started = false;
   private gameOver = false;
   private paused = false;
+  private inventoryOpen = false;
   private elapsed = 0;
   private emberTimer = 0;
   private hitStopTimer = 0;
@@ -106,12 +109,22 @@ export class Game {
         this.hitStopTimer = Math.max(this.hitStopTimer, d);
       },
       spawnProjectile: (origin, dir, dmg) => this.projectiles.spawn(origin, dir, dmg),
+      spawnLoot: (pos) => this.pickups.rollLoot(pos, this.enemies.wave),
     };
 
     this.projectiles = new Projectiles(Balance.enemy.projectileSpeed);
     this.scene.add(this.projectiles.group);
     this.player = new Player(this.ctx);
     this.enemies = new EnemyManager(this.ctx, () => this.player.pos);
+
+    // pickups feed straight into the player's inventory + the HUD
+    this.pickups = new Pickups({
+      addInk: (n) => this.player.inventory.addInk(n),
+      addConsumable: (type, n) => this.player.inventory.addConsumable(type, n),
+      addWeapon: (id) => this.player.inventory.addWeapon(id),
+      float: (pos, text, big) => this.hud.floatText(pos, text, big),
+    });
+    this.scene.add(this.pickups.group);
 
     window.addEventListener("resize", () => this.onResize());
 
@@ -172,6 +185,8 @@ export class Game {
     const pausecard = document.getElementById("pausecard")!;
     document.addEventListener("pointerlockchange", () => {
       if (!this.started || this.gameOver) return;
+      // the inventory screen manages its own pause; don't show the pause card
+      if (this.inventoryOpen) return;
       if (!this.input.pointerLocked) {
         this.paused = true;
         pausecard.classList.remove("hidden");
@@ -185,6 +200,29 @@ export class Game {
     document.getElementById("restart-btn")!.addEventListener("click", () => {
       location.reload();
     });
+
+    // ---- inventory toggle (Tab) ----
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Tab") {
+        e.preventDefault();
+        if (this.started && !this.gameOver) this.toggleInventory();
+      }
+    });
+  }
+
+  private toggleInventory() {
+    // can't open the inventory from the pause card
+    if (this.paused && !this.inventoryOpen) return;
+    this.inventoryOpen = !this.inventoryOpen;
+    if (this.inventoryOpen) {
+      this.paused = true;
+      this.player.inventory.show();
+      document.exitPointerLock?.();
+    } else {
+      this.player.inventory.hide();
+      this.paused = false;
+      this.input.requestLock();
+    }
   }
 
   /** Quality presets: trade fidelity for frame-rate on weaker devices. */
@@ -315,6 +353,7 @@ export class Game {
         (dmg, from) => this.player.resolveProjectile(dmg, from),
         (at) => this.particles.hitSpark(at, 0.5)
       );
+      this.pickups.update(dt, t, this.player.pos);
       if (!this.player.alive && !this.gameOver) this.lose();
     } else {
       // keep the camera drifting for the end card

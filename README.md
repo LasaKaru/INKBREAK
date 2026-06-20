@@ -35,7 +35,27 @@ npm run preview
 | Slash (sword) | `F` — executes `[open]` enemies instantly |
 | Block / Counter | `Space` or `Right Click` — a *just-in-time* guard becomes `[countered] successful`; holding it drains **posture** |
 | Dash (i-frames) | `Shift` — costs posture |
+| Swap weapons | `Q` (ranged) · `E` (melee) |
+| Consumables | `1` heal vial · `2` posture tonic |
+| Inventory | `Tab` (pauses; click to equip) |
 | Pause | `Esc` (releases the mouse) |
+
+## v0.3 — "Arsenal"
+
+A full progression layer:
+
+- **Dual-slot weapons** (`src/game/Weapons.ts`): a ranged slot (Left-Click) and
+  a melee slot (`F`), each swappable. Ships with the Inkbore Pistol + Ink Katana
+  and adds the Heavy Revolver, Scribble SMG (auto-fire), Splatter Gun (shotgun
+  spread), Slab Greatsword, and Ink Whip — all with distinct damage / cadence /
+  reach.
+- **Inventory screen** (`src/game/Inventory.ts`): `Tab` opens a pause-time panel
+  to view and equip your weapons, see ink-drop currency, and check consumables.
+- **Enemy drops & pickups** (`src/game/Pickups.ts`): erased enemies scatter
+  floating **ink drops** (currency), **heal vials**, **posture tonics**, and the
+  occasional **weapon crate**, which magnetize to you and are collected on touch.
+- **Consumables**: `1` heals, `2` restores posture.
+- **Loadout HUD strip** showing equipped weapons, consumable counts, and ink.
 
 ## v0.2 — "Broken Horizon"
 

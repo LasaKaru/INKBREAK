@@ -21,4 +21,6 @@ export interface GameContext {
   hitStop: (duration: number) => void;
   /** enemy gunners spawn travelling ink rounds */
   spawnProjectile: (origin: THREE.Vector3, dir: THREE.Vector3, damage: number) => void;
+  /** an erased enemy rolls loot at a position */
+  spawnLoot: (pos: THREE.Vector3) => void;
 }

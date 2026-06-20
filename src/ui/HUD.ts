@@ -14,6 +14,7 @@ export class HUD {
   private reticle: HTMLElement;
   private staminaFill: HTMLElement;
   private staminaWrap: HTMLElement;
+  private loadout: HTMLElement;
   private narrativeTimer = 0;
 
   constructor(private camera: THREE.Camera) {
@@ -25,12 +26,30 @@ export class HUD {
     this.reticle = document.getElementById("reticle")!;
     this.staminaFill = document.getElementById("stamina-fill")!;
     this.staminaWrap = document.getElementById("stamina")!;
+    this.loadout = document.getElementById("loadout")!;
   }
 
   /** Posture meter, 0..1. Flagged broken when the guard is down. */
   setStamina(frac: number, broken: boolean) {
     this.staminaFill.style.width = `${Math.max(0, Math.min(1, frac)) * 100}%`;
     this.staminaWrap.classList.toggle("broken", broken);
+  }
+
+  /** Bottom loadout strip: equipped weapons, currency, consumable counts. */
+  setLoadout(
+    ranged: string,
+    melee: string,
+    ink: number,
+    consumables: { heal: number; posture: number }
+  ) {
+    this.loadout.innerHTML = `
+      <span class="lo-slot"><b>L</b> ${ranged}</span>
+      <span class="lo-slot"><b>F</b> ${melee}</span>
+      <span class="lo-sep">·</span>
+      <span class="lo-cons"><b>1</b> heal [${consumables.heal}]</span>
+      <span class="lo-cons"><b>2</b> posture [${consumables.posture}]</span>
+      <span class="lo-sep">·</span>
+      <span class="lo-ink">ink [${ink}]</span>`;
   }
 
   private project(pos: THREE.Vector3): { x: number; y: number; visible: boolean } {

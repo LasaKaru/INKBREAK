@@ -3,6 +3,8 @@ import { buildFigure, Figure } from "./Characters";
 import { GameContext } from "./types";
 import { Enemy } from "./Enemy";
 import { Balance } from "./balance";
+import { Inventory } from "./Inventory";
+import { WeaponDef } from "./Weapons";
 
 const P = Balance.player;
 
@@ -42,6 +44,9 @@ export class Player {
   // targeting
   lockedTarget: Enemy | null = null;
 
+  // loadout
+  inventory = new Inventory();
+
   constructor(private ctx: GameContext) {
     this.fig = buildFigure("player");
     this.fig.root.position.copy(this.pos);
@@ -50,6 +55,19 @@ export class Player {
 
     // receive enemy strike resolutions
     Enemy.onStrike = (enemy, _b) => this.resolveIncoming(enemy);
+
+    // refresh visuals + HUD whenever the loadout changes
+    this.inventory.onChange = () => this.refreshLoadout();
+    this.refreshLoadout();
+  }
+
+  /** Apply equipped-weapon visuals + push loadout strings to the HUD. */
+  private refreshLoadout() {
+    const rw = this.inventory.rangedWeapon;
+    const mw = this.inventory.meleeWeapon;
+    this.fig.pistol.scale.setScalar(rw.meshScale);
+    this.fig.sword.scale.setScalar(mw.meshScale);
+    this.ctx.hud.setLoadout(rw.name, mw.name, this.inventory.inkDrops, this.inventory.consumables);
   }
 
   private get speed() {
@@ -143,9 +161,10 @@ export class Player {
 
   // ---------------- input-driven actions ----------------
 
-  private shoot() {
+  private rangedAttack() {
     if (this.shootCooldown > 0) return;
-    this.shootCooldown = P.shootCooldown;
+    const w = this.inventory.rangedWeapon;
+    this.shootCooldown = w.cooldown;
     this.shootAnim = 0.18;
     this.ctx.audio.shoot();
 
@@ -153,28 +172,45 @@ export class Player {
     const muzzle = this.fig.pistol.getObjectByName("muzzle")!;
     const mpos = muzzle.getWorldPosition(new THREE.Vector3());
     const target = this.lockedTarget;
-    const dir = target
-      ? target.center().sub(mpos).normalize()
-      : this.forward();
+    const dir = target ? target.center().sub(mpos).normalize() : this.forward();
     this.ctx.particles.muzzle(mpos, dir);
 
-    if (target && target.alive) {
-      const dmg = target.state === "vulnerable" ? P.shootDamageVulnerable : P.shootDamage;
+    const range = w.range ?? 24;
+    if (w.pellets && w.pellets > 1) {
+      // shotgun: spray everything in a forward cone at close range
+      let hit = false;
+      for (const e of this.ctx.getEnemies()) {
+        if (!e.alive) continue;
+        const d = e.pos.distanceTo(this.pos);
+        if (d > range) continue;
+        const toE = e.pos.clone().sub(this.pos).setY(0).normalize();
+        if (toE.dot(this.forward()) > 0.5) {
+          // more pellets connect up close; damage falls off with distance
+          const falloff = THREE.MathUtils.clamp(1 - d / range, 0.25, 1);
+          const dmg = w.damage * (w.pellets ?? 1) * falloff;
+          e.takeDamage(dmg * (e.state === "vulnerable" ? w.vulnMult : 1), this.pos);
+          hit = true;
+        }
+      }
+      if (!hit) this.ctx.hud.floatText(this.chest(), `[scatter]`);
+    } else if (target && target.alive) {
+      const dmg = w.damage * (target.state === "vulnerable" ? w.vulnMult : 1);
       target.takeDamage(dmg, this.pos);
       this.ctx.hud.floatText(target.center(), `[fired]`);
     }
   }
 
-  private slash() {
+  private meleeAttack() {
     if (this.slashCooldown > 0) return;
-    this.slashCooldown = P.slashCooldown;
-    this.attackAnim = 0.35;
+    const w = this.inventory.meleeWeapon;
+    this.slashCooldown = w.cooldown;
+    this.attackAnim = w.cooldown > 0.7 ? 0.5 : 0.35; // heavier weapons swing longer
     this.ctx.audio.slash();
     // swap to sword pose briefly
     this.fig.sword.visible = true;
     this.fig.pistol.visible = false;
 
-    const reach = P.slashReach;
+    const reach = w.reach ?? 3;
     let hitAny = false;
     for (const e of this.ctx.getEnemies()) {
       if (!e.alive) continue;
@@ -189,7 +225,7 @@ export class Player {
             e.takeDamage(999, this.pos);
             this.ctx.hud.floatText(e.center(), `[<span class="b">execution</span>]`, true);
           } else {
-            e.takeDamage(P.slashDamage, this.pos);
+            e.takeDamage(w.damage, this.pos);
             this.ctx.particles.hitSpark(e.center(), 1);
           }
         }
@@ -198,6 +234,22 @@ export class Player {
     if (!hitAny) {
       this.ctx.hud.floatText(this.chest(), `[swing] — missed`);
     }
+  }
+
+  private useConsumable(type: "heal" | "posture") {
+    if (!this.inventory.use(type)) {
+      this.ctx.hud.floatText(this.chest(), `[<span class="b">none left</span>]`);
+      return;
+    }
+    if (type === "heal") {
+      this.health = Math.min(P.maxHealth, this.health + 40);
+      this.ctx.hud.setPlayerHealth(this.health);
+      this.ctx.hud.floatText(this.chest(), `[<span class="b">+health</span>]`);
+    } else {
+      this.stamina = Math.min(P.maxStamina, this.stamina + 60);
+      this.ctx.hud.floatText(this.chest(), `[<span class="b">+posture</span>]`);
+    }
+    this.ctx.audio.counter();
   }
 
   private dash() {
@@ -297,9 +349,17 @@ export class Player {
     this.ctx.hud.setStamina(this.stamina / P.maxStamina, this.guardBroken);
 
     if (this.alive) {
-      if (inp.clickedThisFrame) this.shoot();
-      if (inp.consumePress("f")) this.slash();
+      // ranged: auto weapons fire while held, others on click
+      const rw = this.inventory.rangedWeapon;
+      if (rw.auto ? inp.mouseDown : inp.clickedThisFrame) this.rangedAttack();
+      if (inp.consumePress("f")) this.meleeAttack();
       if (inp.consumePress("shift")) this.dash();
+      // weapon cycling
+      if (inp.consumePress("q")) this.inventory.cycleRanged(1);
+      if (inp.consumePress("e")) this.inventory.cycleMelee(1);
+      // consumables
+      if (inp.consumePress("1")) this.useConsumable("heal");
+      if (inp.consumePress("2")) this.useConsumable("posture");
     }
 
     // cooldowns
