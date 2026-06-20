@@ -25,6 +25,9 @@ Legend — Effort: `S` ≤1 day · `M` a few days · `L` ~1–2 weeks · `XL` 3+
   with aimed/radial ink volleys, summons, ground shockwaves, open-window
   double-damage, a **boss health bar** tied to prison integrity, and a unified
   `Targetable` lock-on interface.
+- **v0.5 "Clean Ink"** — reworked posterized high-contrast B&W shader, brighter
+  scene + lighter materials, and a full **Settings page** (live look tuning +
+  presets + quality + volume, persisted) reachable from **title + pause menus**.
 
 ---
 

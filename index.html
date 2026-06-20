@@ -81,15 +81,10 @@
             A faceless figure. A prison drawn in ink.<br />
             Break it before it redraws you.
           </p>
-          <div class="quality-row">
-            <label for="quality">render</label>
-            <select id="quality">
-              <option value="low">low</option>
-              <option value="medium" selected>medium</option>
-              <option value="high">high</option>
-            </select>
+          <div class="menu-btns">
+            <button id="start-btn">[ begin ]</button>
+            <button id="title-settings-btn" class="ghost">[ settings ]</button>
           </div>
-          <button id="start-btn">[ begin ]</button>
           <p class="tiny">
             best with sound · click to lock mouse · esc to pause
           </p>
@@ -104,10 +99,16 @@
         <div class="title-inner">
           <h2>[ paused ]</h2>
           <p class="flavor">the ink holds its breath.</p>
-          <button id="resume-btn">[ resume ]</button>
-          <button id="restart-btn" class="ghost">[ restart ]</button>
+          <div class="menu-btns">
+            <button id="resume-btn">[ resume ]</button>
+            <button id="pause-settings-btn" class="ghost">[ settings ]</button>
+            <button id="restart-btn" class="ghost">[ restart ]</button>
+          </div>
         </div>
       </div>
+
+      <!-- Settings panel (reachable from title + pause) -->
+      <div id="settings" class="hidden"></div>
 
       <!-- Ink wipe transition layer -->
       <div id="inkwipe"></div>

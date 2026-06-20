@@ -7,12 +7,19 @@ export class Audio {
   private master!: GainNode;
   enabled = true;
 
+  private volume = 0.6;
+
   init() {
     if (this.ctx) return;
     this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
     this.master = this.ctx.createGain();
-    this.master.gain.value = 0.45;
+    this.master.gain.value = this.volume;
     this.master.connect(this.ctx.destination);
+  }
+
+  setVolume(v: number) {
+    this.volume = v;
+    if (this.master) this.master.gain.value = v;
   }
 
   private now() {

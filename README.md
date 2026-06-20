@@ -40,6 +40,26 @@ npm run preview
 | Inventory | `Tab` (pauses; click to equip) |
 | Pause | `Esc` (releases the mouse) |
 
+## v0.5 — "Clean Ink"
+
+A visual overhaul toward crisp, high-contrast black-and-white, plus full
+player control over the look:
+
+- **Reworked ink shader** (`src/render/sketchShaders.ts`): brightness +
+  contrast curve → **posterized tone bands** → crisp Sobel outlines, with
+  hatching / grain / vignette now *subtle and optional* instead of muddying
+  every surface. The default reads as clean manga ink, not murky pencil.
+- **Brighter scene**: white-paper background, stronger ambient + key light, and
+  lightened floor / pillars / walls / mountains so surfaces land as white with
+  dark ink accents (figure, cages, void).
+- **Settings page** (`src/game/Settings.ts`): reachable from the **title menu**
+  and the **pause menu**. Live-tunable look — contrast, brightness, ink-outline
+  strength, tone bands, hatching, grain, vignette — plus **presets**
+  (`clean` / `manga` / `sketch` / `noir`), **quality** (low/medium/high), and
+  **volume**. Everything persists to `localStorage`.
+- **Game menus**: title screen `[ begin ] / [ settings ]`, pause screen
+  `[ resume ] / [ settings ] / [ restart ]`.
+
 ## v0.4 — "The Warden Awakens"
 
 After three waves the prison stops pretending — the central void-smoke entity

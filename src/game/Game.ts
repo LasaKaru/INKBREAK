@@ -10,6 +10,7 @@ import { EnemyManager } from "./EnemyManager";
 import { Projectiles } from "./Projectiles";
 import { Pickups } from "./Pickups";
 import { Boss } from "./Boss";
+import { Settings, SettingsState } from "./Settings";
 import { Balance } from "./balance";
 import { HUD } from "../ui/HUD";
 import { Audio } from "../audio/Audio";
@@ -32,6 +33,7 @@ export class Game {
   private hud: HUD;
   private audio: Audio;
   private post: Postprocessing;
+  private settings!: Settings;
 
   private arena: Arena;
   private environment: Environment;
@@ -62,11 +64,11 @@ export class Game {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    // ---- scene ----
+    // ---- scene ---- (bright paper white so the ink look stays high-contrast)
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xe9e7e1);
-    // deeper fog so the hall stays crisp but mountains wash toward the white horizon
-    this.scene.fog = new THREE.Fog(0xe9e7e1, 36, 200);
+    this.scene.background = new THREE.Color(0xf4f3ef);
+    // fog washes the far mountains toward the white horizon without muddying the hall
+    this.scene.fog = new THREE.Fog(0xf4f3ef, 48, 210);
 
     // ---- camera ----
     this.camera = new THREE.PerspectiveCamera(
@@ -131,6 +133,10 @@ export class Game {
     });
     this.scene.add(this.pickups.group);
 
+    // ---- settings (look / quality / volume) with live apply ----
+    this.settings = new Settings((s) => this.applySettings(s));
+    this.applySettings(this.settings.state);
+
     window.addEventListener("resize", () => this.onResize());
 
     this.bindStart(canvas);
@@ -139,11 +145,12 @@ export class Game {
   }
 
   private setupLights() {
-    const ambient = new THREE.AmbientLight(0xffffff, 0.55);
+    // bright ambient so surfaces read as white paper; the shader handles contrast
+    const ambient = new THREE.AmbientLight(0xffffff, 0.95);
     this.scene.add(ambient);
 
     // strong key light for the dramatic, high-contrast shadows / god-ray feel
-    const key = new THREE.DirectionalLight(0xffffff, 1.5);
+    const key = new THREE.DirectionalLight(0xffffff, 1.7);
     key.position.set(12, 26, 8);
     key.castShadow = true;
     key.shadow.mapSize.set(2048, 2048);
@@ -157,41 +164,40 @@ export class Game {
     key.shadow.bias = -0.0004;
     this.scene.add(key);
 
-    // cold rim/fill from the opposite side
-    const fill = new THREE.DirectionalLight(0xdddddd, 0.4);
+    // rim/fill from the opposite side keeps shadowed faces from going pure black
+    const fill = new THREE.DirectionalLight(0xffffff, 0.6);
     fill.position.set(-14, 10, -10);
     this.scene.add(fill);
-
-    // faint up-light from the void
-    const voidGlow = new THREE.PointLight(0x222222, 0.6, 40);
-    voidGlow.position.set(0, 14, 0);
-    this.scene.add(voidGlow);
   }
 
   private bindStart(canvas: HTMLCanvasElement) {
     const titlecard = document.getElementById("titlecard")!;
+    const pausecard = document.getElementById("pausecard")!;
     const btn = document.getElementById("start-btn")!;
-    const quality = document.getElementById("quality") as HTMLSelectElement;
     btn.addEventListener("click", () => {
       this.audio.init();
-      this.applyQuality(quality.value);
       titlecard.classList.add("hidden");
       this.input.requestLock();
       this.beginIntro();
     });
     // re-lock the pointer on click during play
     canvas.addEventListener("click", () => {
-      if (this.started && !this.input.pointerLocked && !this.gameOver && !this.paused) {
+      if (
+        this.started &&
+        !this.input.pointerLocked &&
+        !this.gameOver &&
+        !this.paused &&
+        !this.settings.isOpen
+      ) {
         this.input.requestLock();
       }
     });
 
     // ---- pause handling: losing pointer lock mid-combat pauses ----
-    const pausecard = document.getElementById("pausecard")!;
     document.addEventListener("pointerlockchange", () => {
       if (!this.started || this.gameOver) return;
-      // the inventory screen manages its own pause; don't show the pause card
-      if (this.inventoryOpen) return;
+      // the inventory + settings screens manage their own pause state
+      if (this.inventoryOpen || this.settings.isOpen) return;
       if (!this.input.pointerLocked) {
         this.paused = true;
         pausecard.classList.remove("hidden");
@@ -206,13 +212,40 @@ export class Game {
       location.reload();
     });
 
+    // ---- settings access from both menus ----
+    document.getElementById("title-settings-btn")!.addEventListener("click", () => {
+      this.settings.show();
+    });
+    document.getElementById("pause-settings-btn")!.addEventListener("click", () => {
+      this.settings.show();
+    });
+
     // ---- inventory toggle (Tab) ----
     window.addEventListener("keydown", (e) => {
       if (e.key === "Tab") {
         e.preventDefault();
-        if (this.started && !this.gameOver) this.toggleInventory();
+        if (this.started && !this.gameOver && !this.settings.isOpen) this.toggleInventory();
       }
     });
+  }
+
+  /** Apply settings: render look, quality (pixel ratio + shadows), volume. */
+  private applySettings(s: SettingsState) {
+    this.post.setLook(s);
+    this.audio.setVolume(s.volume);
+    if (s.quality === "low") {
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
+      this.renderer.shadowMap.enabled = false;
+    } else if (s.quality === "high") {
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      this.renderer.shadowMap.enabled = true;
+    } else {
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      this.renderer.shadowMap.enabled = true;
+    }
+    this.post.setSize(window.innerWidth, window.innerHeight, this.renderer.getPixelRatio());
+    // live preview while not running (title/pause screens)
+    if (!this.started || this.paused) this.renderStill();
   }
 
   private toggleInventory() {
@@ -228,21 +261,6 @@ export class Game {
       this.paused = false;
       this.input.requestLock();
     }
-  }
-
-  /** Quality presets: trade fidelity for frame-rate on weaker devices. */
-  private applyQuality(level: string) {
-    if (level === "low") {
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
-      this.renderer.shadowMap.enabled = false;
-    } else if (level === "high") {
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      this.renderer.shadowMap.enabled = true;
-    } else {
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-      this.renderer.shadowMap.enabled = true;
-    }
-    this.onResize();
   }
 
   /** Cinematic intro: ink wipe + opening monologue, then the first wave. */

@@ -39,12 +39,12 @@ export class Arena {
       pos.setY(i, Math.sin(x * 0.4) * 0.03 + Math.cos(z * 0.5) * 0.03);
     }
     geo.computeVertexNormals();
-    const floor = new THREE.Mesh(geo, this.mat(0xcfccc5, 1));
+    const floor = new THREE.Mesh(geo, this.mat(0xe8e6df, 1));
     floor.receiveShadow = true;
     this.group.add(floor);
 
     // grid of darker tile seams for the drawn parquet look
-    const grid = new THREE.GridHelper(80, 48, 0x3a3733, 0x6a6762);
+    const grid = new THREE.GridHelper(80, 48, 0x4a4743, 0x8f8c86);
     (grid.material as THREE.Material).opacity = 0.35;
     (grid.material as THREE.Material).transparent = true;
     grid.position.y = 0.01;
@@ -54,7 +54,7 @@ export class Arena {
   private buildPillars() {
     const count = 12;
     const geo = new THREE.CylinderGeometry(0.9, 1.1, 16, 8);
-    const inst = new THREE.InstancedMesh(geo, this.mat(0xb7b4ad), count);
+    const inst = new THREE.InstancedMesh(geo, this.mat(0xd6d3cc), count);
     inst.castShadow = true;
     inst.receiveShadow = true;
     const m = new THREE.Matrix4();
@@ -71,7 +71,7 @@ export class Arena {
 
     // capitals on top of pillars
     const capGeo = new THREE.BoxGeometry(2.6, 0.7, 2.6);
-    const capInst = new THREE.InstancedMesh(capGeo, this.mat(0xa6a39c), count);
+    const capInst = new THREE.InstancedMesh(capGeo, this.mat(0xccc9c2), count);
     capInst.castShadow = true;
     for (let i = 0; i < count; i++) {
       const a = (i / count) * Math.PI * 2;
@@ -140,7 +140,7 @@ export class Arena {
     // stepped altar base
     for (let i = 0; i < 4; i++) {
       const s = 7 - i * 1.4;
-      const step = new THREE.Mesh(new THREE.BoxGeometry(s, 0.5, s), this.mat(0xaeaaa3));
+      const step = new THREE.Mesh(new THREE.BoxGeometry(s, 0.5, s), this.mat(0xd0cdc6));
       step.position.y = 0.25 + i * 0.5;
       step.castShadow = true;
       step.receiveShadow = true;
@@ -175,7 +175,7 @@ export class Arena {
   private buildWalls() {
     // A ruined outer colonnade with gaps — the hall is broken open so the ink
     // lake, the standing stones and the mountains beyond are all visible.
-    const stone = this.mat(0xb0ada6);
+    const stone = this.mat(0xd2cfc8);
     const ringR = 23;
     const count = 16;
     for (let i = 0; i < count; i++) {

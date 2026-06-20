@@ -115,8 +115,8 @@ export class Environment {
         this.group.add(peak);
       }
     };
-    make(120, 26, 30, 70, 0x8d8a84); // far range
-    make(80, 20, 18, 42, 0x6f6c66); // near range
+    make(120, 26, 30, 70, 0xcac7c0); // far range
+    make(80, 20, 18, 42, 0xa8a59e); // near range
   }
 
   // ---------------- monoliths in the lake ----------------
@@ -134,7 +134,7 @@ export class Environment {
     }
     geo.computeVertexNormals();
 
-    const inst = new THREE.InstancedMesh(geo, this.mat(0x4f4c47), count);
+    const inst = new THREE.InstancedMesh(geo, this.mat(0x86837d), count);
     inst.castShadow = true;
     const m = new THREE.Matrix4();
     const q = new THREE.Quaternion();
@@ -158,7 +158,7 @@ export class Environment {
   private buildShoreStones() {
     const count = 40;
     const geo = new THREE.DodecahedronGeometry(1, 0);
-    const inst = new THREE.InstancedMesh(geo, this.mat(0x9a978f), count);
+    const inst = new THREE.InstancedMesh(geo, this.mat(0xc2bfb8), count);
     inst.castShadow = true;
     inst.receiveShadow = true;
     const m = new THREE.Matrix4();

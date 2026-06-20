@@ -39,6 +39,26 @@ export class Postprocessing {
     this.flashTarget = Math.max(this.flashTarget, amount);
   }
 
+  /** Apply art-direction look values from Settings. */
+  setLook(o: {
+    contrast: number;
+    brightness: number;
+    edge: number;
+    levels: number;
+    hatching: number;
+    grain: number;
+    vignette: number;
+  }) {
+    const u = this.sketchPass.uniforms;
+    u.contrast.value = o.contrast;
+    u.brightness.value = o.brightness;
+    u.edgeStrength.value = o.edge;
+    u.levels.value = o.levels;
+    u.hatchStrength.value = o.hatching;
+    u.grainStrength.value = o.grain;
+    u.vignette.value = o.vignette;
+  }
+
   update(dt: number, elapsed: number) {
     this.sketchPass.uniforms.time.value = elapsed;
     // ease flash back to zero
