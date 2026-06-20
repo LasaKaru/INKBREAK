@@ -15,6 +15,9 @@ export class HUD {
   private staminaFill: HTMLElement;
   private staminaWrap: HTMLElement;
   private loadout: HTMLElement;
+  private bossBar: HTMLElement;
+  private bossFill: HTMLElement;
+  private bossName: HTMLElement;
   private narrativeTimer = 0;
 
   constructor(private camera: THREE.Camera) {
@@ -27,6 +30,21 @@ export class HUD {
     this.staminaFill = document.getElementById("stamina-fill")!;
     this.staminaWrap = document.getElementById("stamina")!;
     this.loadout = document.getElementById("loadout")!;
+    this.bossBar = document.getElementById("boss-bar")!;
+    this.bossFill = document.getElementById("boss-fill")!;
+    this.bossName = document.getElementById("boss-name")!;
+  }
+
+  showBoss(name: string) {
+    this.bossName.textContent = name;
+    this.bossFill.style.width = "100%";
+    this.bossBar.classList.add("show");
+  }
+  setBoss(frac: number) {
+    this.bossFill.style.width = `${Math.max(0, Math.min(1, frac)) * 100}%`;
+  }
+  hideBoss() {
+    this.bossBar.classList.remove("show");
   }
 
   /** Posture meter, 0..1. Flagged broken when the guard is down. */

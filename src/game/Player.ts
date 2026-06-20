@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { buildFigure, Figure } from "./Characters";
-import { GameContext } from "./types";
+import { GameContext, Targetable } from "./types";
 import { Enemy } from "./Enemy";
 import { Balance } from "./balance";
 import { Inventory } from "./Inventory";
@@ -41,8 +41,8 @@ export class Player {
   private shootAnim = 0;
   private time = 0;
 
-  // targeting
-  lockedTarget: Enemy | null = null;
+  // targeting (enemies or the boss core)
+  lockedTarget: Targetable | null = null;
 
   // loadout
   inventory = new Inventory();
@@ -231,6 +231,16 @@ export class Player {
         }
       }
     }
+    // the boss core can be struck when it has dipped low (open window)
+    const boss = this.ctx.getBoss();
+    if (boss && boss.alive && boss.center().y < 5.5) {
+      const d = Math.hypot(boss.pos.x - this.pos.x, boss.pos.z - this.pos.z);
+      if (d < reach + 2) {
+        boss.takeDamage(w.damage, this.pos);
+        this.ctx.particles.hitSpark(boss.center(), 1.3);
+        hitAny = true;
+      }
+    }
     if (!hitAny) {
       this.ctx.hud.floatText(this.chest(), `[swing] — missed`);
     }
@@ -286,14 +296,19 @@ export class Player {
   private acquireTarget() {
     const camDir = new THREE.Vector3();
     this.ctx.camera.getWorldDirection(camDir);
-    let best: Enemy | null = null;
+    let best: Targetable | null = null;
     let bestScore = -1;
-    for (const e of this.ctx.getEnemies()) {
+
+    const candidates: Targetable[] = [...this.ctx.getEnemies()];
+    const boss = this.ctx.getBoss();
+    if (boss && boss.alive) candidates.push(boss);
+
+    for (const e of candidates) {
       if (!e.alive) continue;
       const to = e.center().sub(this.ctx.camera.position).normalize();
       const align = to.dot(camDir);
       const dist = e.pos.distanceTo(this.pos);
-      if (align > 0.9 && dist < 22) {
+      if (align > 0.9 && dist < 28) {
         const score = align - dist * 0.005;
         if (score > bestScore) {
           bestScore = score;
@@ -408,7 +423,7 @@ export class Player {
     // ---- HUD ----
     this.ctx.hud.updateReticle(
       this.lockedTarget ? this.lockedTarget.center() : null,
-      this.lockedTarget?.state === "vulnerable"
+      this.lockedTarget?.state === "vulnerable" || this.lockedTarget?.state === "open"
     );
   }
 

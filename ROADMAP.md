@@ -21,6 +21,10 @@ Legend — Effort: `S` ≤1 day · `M` a few days · `L` ~1–2 weeks · `XL` 3+
   (pistol/revolver/SMG/shotgun, katana/greatsword/whip) with swapping, **enemy
   loot drops + pickups**, **ink-drop currency**, **consumables** (heal / posture),
   and a loadout HUD strip.
+- **v0.4 "The Warden Awakens"** — multi-phase **boss fight** (the void entity)
+  with aimed/radial ink volleys, summons, ground shockwaves, open-window
+  double-damage, a **boss health bar** tied to prison integrity, and a unified
+  `Targetable` lock-on interface.
 
 ---
 

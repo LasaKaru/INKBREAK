@@ -12,6 +12,8 @@ export class EnemyManager {
   wave = 0;
   private betweenTimer = 0;
   private spawning = false;
+  private bossTriggered = false;
+  readonly wavesBeforeBoss = 3;
 
   // narrative beats keyed to wave clears
   private quips = [
@@ -33,7 +35,28 @@ export class EnemyManager {
     },
   ];
 
-  constructor(private ctx: GameContext, private playerPos: () => THREE.Vector3) {}
+  constructor(
+    private ctx: GameContext,
+    private playerPos: () => THREE.Vector3,
+    private onBossTime: () => void
+  ) {}
+
+  /** Spawn one figure at a ring position (used by waves and boss summons). */
+  private spawnOne(hasGun: boolean) {
+    const a = Math.random() * Math.PI * 2;
+    const r = 14 + Math.random() * 6;
+    const p = new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r);
+    const e = new Enemy(this.ctx, p, hasGun);
+    this.ctx.particles.inkBurst(e.center(), 0.7);
+    this.enemies.push(e);
+  }
+
+  /** Boss reinforcements — drop figures in immediately. */
+  summon(n: number) {
+    for (let i = 0; i < n; i++) {
+      setTimeout(() => this.spawnOne(Math.random() < 0.4), i * 250);
+    }
+  }
 
   start() {
     this.wave = 0;
@@ -55,14 +78,7 @@ export class EnemyManager {
         this.spawning = false;
         return;
       }
-      const a = Math.random() * Math.PI * 2;
-      const r = 14 + Math.random() * 6;
-      const p = new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r);
-      const hasGun = Math.random() < 0.35 && this.wave > 1;
-      const e = new Enemy(this.ctx, p, hasGun);
-      // ink-in spawn puff
-      this.ctx.particles.inkBurst(e.center(), 0.7);
-      this.enemies.push(e);
+      this.spawnOne(Math.random() < 0.35 && this.wave > 1);
       spawned++;
       setTimeout(doSpawn, 350);
     };
@@ -79,6 +95,8 @@ export class EnemyManager {
 
     const livingCount = this.enemies.filter((e) => e.alive).length;
 
+    if (this.bossTriggered) return; // boss phase owns the fight now
+
     if (!this.spawning && livingCount === 0 && this.betweenTimer <= 0) {
       // wave cleared
       const q = this.quips[(this.wave - 1) % this.quips.length];
@@ -89,7 +107,12 @@ export class EnemyManager {
     if (this.betweenTimer > 0) {
       this.betweenTimer -= dt;
       if (this.betweenTimer <= 0) {
-        this.nextWave();
+        if (this.wave >= this.wavesBeforeBoss) {
+          this.bossTriggered = true;
+          this.onBossTime();
+        } else {
+          this.nextWave();
+        }
       }
     }
   }

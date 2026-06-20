@@ -40,6 +40,21 @@ npm run preview
 | Inventory | `Tab` (pauses; click to equip) |
 | Pause | `Esc` (releases the mouse) |
 
+## v0.4 — "The Warden Awakens"
+
+After three waves the prison stops pretending — the central void-smoke entity
+descends as a boss (`src/game/Boss.ts`):
+
+- **Three-phase fight** scaling with its health: aimed ink volleys, radial
+  bullet-bursts, summoned figures, and (phase 2+) expanding **ground shockwaves**
+  you must dash or block through.
+- **Open windows**: after big attacks the Warden dips low and its eye swells —
+  it takes **2× damage** and can be meleed, rewarding aggression.
+- **Boss health bar** wired to the **prison-integrity meter**, so damaging the
+  Warden literally breaks the prison toward the `[0%]` ending.
+- Unified **targeting interface** (`Targetable`) so lock-on, shooting and melee
+  work on enemies and the boss alike.
+
 ## v0.3 — "Arsenal"
 
 A full progression layer:

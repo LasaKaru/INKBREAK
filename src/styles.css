@@ -162,6 +162,54 @@ body {
   margin-top: 6px;
 }
 
+/* Boss health bar */
+#boss-bar {
+  position: absolute;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-12px);
+  width: min(620px, 84vw);
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  pointer-events: none;
+}
+
+#boss-bar.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+#boss-name {
+  font-family: "Shadows Into Light", cursive;
+  font-size: 22px;
+  letter-spacing: 4px;
+  margin-bottom: 5px;
+  color: var(--ink);
+}
+
+#boss-track {
+  height: 12px;
+  border: 1.5px solid var(--ink);
+  background: rgba(233, 231, 225, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+#boss-fill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--ink),
+    var(--ink) 6px,
+    #2a2724 6px,
+    #2a2724 12px
+  );
+  transition: width 0.2s ease;
+}
+
 /* Reticle */
 #reticle {
   position: absolute;

@@ -9,6 +9,7 @@ import { Player } from "./Player";
 import { EnemyManager } from "./EnemyManager";
 import { Projectiles } from "./Projectiles";
 import { Pickups } from "./Pickups";
+import { Boss } from "./Boss";
 import { Balance } from "./balance";
 import { HUD } from "../ui/HUD";
 import { Audio } from "../audio/Audio";
@@ -40,6 +41,8 @@ export class Game {
   private enemies: EnemyManager;
   private projectiles: Projectiles;
   private pickups!: Pickups;
+  private boss: Boss | null = null;
+  private bossDefeated = false;
   private ctx: GameContext;
 
   private prisonIntegrity = 100;
@@ -110,12 +113,14 @@ export class Game {
       },
       spawnProjectile: (origin, dir, dmg) => this.projectiles.spawn(origin, dir, dmg),
       spawnLoot: (pos) => this.pickups.rollLoot(pos, this.enemies.wave),
+      summonEnemies: (n) => this.enemies.summon(n),
+      getBoss: () => this.boss,
     };
 
     this.projectiles = new Projectiles(Balance.enemy.projectileSpeed);
     this.scene.add(this.projectiles.group);
     this.player = new Player(this.ctx);
-    this.enemies = new EnemyManager(this.ctx, () => this.player.pos);
+    this.enemies = new EnemyManager(this.ctx, () => this.player.pos, () => this.startBoss());
 
     // pickups feed straight into the player's inventory + the HUD
     this.pickups = new Pickups({
@@ -276,15 +281,24 @@ export class Game {
   }
 
   private tickIntegrity(amount: number) {
-    this.prisonIntegrity = Math.max(0, this.prisonIntegrity - amount);
+    // pre-boss flavour; the real win condition is the Warden's defeat. Floor it
+    // so wave kills alone can never end the run before the boss appears.
+    if (this.boss) return; // boss owns the integrity readout during the fight
+    this.prisonIntegrity = Math.max(8, this.prisonIntegrity - amount);
     this.hud.setPrisonIntegrity(this.prisonIntegrity);
-    if (this.prisonIntegrity <= 0 && !this.gameOver) {
-      this.win();
-    }
+  }
+
+  /** The prison wakes: spawn the Warden boss. */
+  private startBoss() {
+    this.boss = new Boss(this.ctx);
+    this.hud.banner("THE WARDEN", "the prison wakes");
+    this.post.punchFlash(0.6);
   }
 
   private win() {
     this.gameOver = true;
+    this.hud.hideBoss();
+    this.hud.setPrisonIntegrity(0);
     this.hud.banner("the prison breaks", "[0%]");
     this.hud.say(
       "The prison stood firm at a perfect [100%]... until it didn't.",
@@ -354,6 +368,25 @@ export class Game {
         (at) => this.particles.hitSpark(at, 0.5)
       );
       this.pickups.update(dt, t, this.player.pos);
+
+      // ---- boss ---- (keep updating through the death animation)
+      if (this.boss) {
+        this.boss.update(dt, t, this.player.pos, (dmg, from) =>
+          this.player.resolveProjectile(dmg, from)
+        );
+        if (this.boss.alive) {
+          this.hud.setPrisonIntegrity(this.boss.healthFrac * 100);
+        } else if (!this.bossDefeated) {
+          this.bossDefeated = true;
+          this.hud.say(
+            "The prison stood firm at a perfect [100%]... and then it broke.",
+            "— the warden was only ever me.",
+            999
+          );
+          setTimeout(() => this.win(), 2000);
+        }
+      }
+
       if (!this.player.alive && !this.gameOver) this.lose();
     } else {
       // keep the camera drifting for the end card
