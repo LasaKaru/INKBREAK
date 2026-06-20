@@ -8,6 +8,18 @@ Legend — Effort: `S` ≤1 day · `M` a few days · `L` ~1–2 weeks · `XL` 3+
 
 ---
 
+## ✅ Shipped
+
+- **v0.1** — core combat prototype: sketch post-processing, faceless figure,
+  shoot/slash/block/counter/dash, white-enemy state machine, waves, bracketed
+  HUD, sharks, void smoke, ink particles, procedural audio, prison-integrity.
+- **v0.2 "Broken Horizon"** — surrounding terrain (ink lake + mountains +
+  standing stones), **stamina/posture** with guard-break, **hit-stop**,
+  **ranged gunner enemies + projectiles**, **central balance config**, **pause
+  menu + quality presets**, **GitHub Pages deploy workflow**.
+
+---
+
 ## 1. Player Progression & Inventory
 
 | Feature | Effort | Priority | Notes / builds on |

@@ -88,6 +88,39 @@ body {
   animation: shake 0.25s linear;
 }
 
+/* posture / stamina bar */
+#stamina {
+  width: 150px;
+  height: 6px;
+  margin-top: 8px;
+  border: 1px solid var(--ink);
+  background: rgba(20, 17, 15, 0.06);
+  position: relative;
+}
+
+#stamina-fill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  background: var(--ink);
+  transform-origin: left;
+  transition: width 0.08s linear;
+}
+
+#stamina.broken {
+  animation: shake 0.3s linear;
+}
+
+#stamina.broken #stamina-fill {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--ink),
+    var(--ink) 3px,
+    transparent 3px,
+    transparent 6px
+  );
+}
+
 @keyframes shake {
   0%,
   100% {
@@ -347,6 +380,81 @@ body {
   font-size: 11px;
   letter-spacing: 2px;
   color: var(--gray);
+}
+
+.quality-row {
+  margin-top: 26px;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--gray);
+}
+
+.quality-row label {
+  margin-right: 10px;
+}
+
+.quality-row select {
+  font-family: "Special Elite", monospace;
+  font-size: 14px;
+  background: transparent;
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+/* ---------------- Pause overlay ---------------- */
+#pausecard {
+  position: absolute;
+  inset: 0;
+  z-index: 28;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(
+    circle at 50% 45%,
+    rgba(233, 231, 225, 0.45),
+    rgba(233, 231, 225, 0.9) 70%
+  );
+  transition: opacity 0.3s ease;
+}
+
+#pausecard.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#pausecard h2 {
+  font-size: clamp(40px, 8vw, 80px);
+  letter-spacing: 8px;
+  font-weight: 400;
+}
+
+#pausecard button,
+#resume-btn,
+#restart-btn {
+  display: block;
+  margin: 14px auto 0;
+  background: transparent;
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  font-family: "Special Elite", monospace;
+  font-size: 18px;
+  letter-spacing: 3px;
+  padding: 10px 28px;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+#pausecard button:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+#restart-btn.ghost {
+  border-color: var(--gray);
+  color: var(--gray);
+  font-size: 14px;
 }
 
 /* ---------------- Ink wipe ---------------- */

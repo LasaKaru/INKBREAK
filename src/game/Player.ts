@@ -2,6 +2,9 @@ import * as THREE from "three";
 import { buildFigure, Figure } from "./Characters";
 import { GameContext } from "./types";
 import { Enemy } from "./Enemy";
+import { Balance } from "./balance";
+
+const P = Balance.player;
 
 /**
  * The faceless figure in the black suit. Owns the third-person camera rig and
@@ -12,8 +15,13 @@ export class Player {
   fig: Figure;
   pos = new THREE.Vector3(0, 0, 10);
   vel = new THREE.Vector3();
-  health = 100;
+  health: number = P.maxHealth;
   alive = true;
+
+  // posture / stamina
+  stamina: number = P.maxStamina;
+  private staminaSpentAt = -10;
+  private guardBrokenUntil = -10;
 
   // camera rig (yaw 0 => camera behind the player on +Z, player facing the hall)
   yaw = 0;
@@ -45,7 +53,32 @@ export class Player {
   }
 
   private get speed() {
-    return 6;
+    return P.moveSpeed;
+  }
+
+  get guardBroken() {
+    return this.time < this.guardBrokenUntil;
+  }
+
+  /** Spend stamina to absorb a hit; returns whether the guard held. */
+  private spendBlock(): "blocked" | "broken" {
+    if (this.stamina >= P.staminaBlockHit) {
+      this.stamina -= P.staminaBlockHit;
+      this.staminaSpentAt = this.time;
+      return "blocked";
+    }
+    this.guardBreak();
+    return "broken";
+  }
+
+  private guardBreak() {
+    this.guardBrokenUntil = this.time + P.guardBreakStun;
+    this.stamina = 0;
+    this.staminaSpentAt = this.time;
+    this.blocking = false;
+    this.ctx.hud.floatText(this.chest(), `[<span class="b">guard broken</span>]`, true);
+    this.ctx.audio.hurt();
+    this.ctx.post.punchFlash(0.3);
   }
 
   damage(amount: number) {
@@ -60,31 +93,51 @@ export class Player {
     }
   }
 
-  /** Called when an enemy's strike lands its timing. */
+  /** Called when an enemy's melee strike lands its timing. */
   private resolveIncoming(enemy: Enemy) {
     const center = enemy.center();
     if (this.blocking) {
       const sinceBlock = this.time - this.blockStartedAt;
-      if (sinceBlock < 0.32) {
-        // PERFECT parry -> counter
-        enemy.stagger(2.2);
+      if (sinceBlock < P.parryWindow) {
+        // PERFECT parry -> counter (free, and refunds posture)
+        enemy.stagger(Balance.enemy.staggerTime);
+        this.stamina = Math.min(P.maxStamina, this.stamina + P.staminaParryRefund);
         this.ctx.hud.floatText(center, `[<span class="b">countered</span>] successful`, true);
         this.ctx.audio.counter();
         this.ctx.post.punchFlash(0.4);
+        this.ctx.hitStop(Balance.feel.hitStopHeavy);
         this.ctx.particles.hitSpark(center, 1.4);
-      } else {
-        // normal block -> chip damage
+      } else if (this.spendBlock() === "blocked") {
+        // normal block -> chip damage, costs posture
         this.ctx.hud.floatText(center, `[<span class="b">attack blocked</span>]`);
         this.ctx.audio.block();
         this.ctx.particles.hitSpark(center, 0.6);
-        this.damage(4);
+        this.damage(P.blockChipDamage);
+      } else {
+        // guard broke under the strike -> full hit
+        this.ctx.hud.floatText(center, `[<span class="b">hit</span>]`);
+        this.damage(P.hitDamage);
       }
     } else {
       this.ctx.hud.floatText(center, `[<span class="b">hit</span>]`);
-      this.damage(14);
-      // knockback
+      this.damage(P.hitDamage);
       const dir = this.pos.clone().sub(enemy.pos).setY(0).normalize();
       this.vel.addScaledVector(dir, 5);
+    }
+  }
+
+  /** Called when an enemy ink round reaches the player. */
+  resolveProjectile(dmg: number, from: THREE.Vector3) {
+    if (!this.alive) return;
+    const toSource = from.clone().sub(this.pos).setY(0).normalize();
+    const facing = toSource.dot(this.forward()) > 0.1;
+    if (this.blocking && facing && this.spendBlock() === "blocked") {
+      this.ctx.hud.floatText(this.chest(), `[<span class="b">deflected</span>]`);
+      this.ctx.audio.block();
+      this.ctx.particles.hitSpark(from, 0.7);
+    } else {
+      this.ctx.hud.floatText(this.chest(), `[<span class="b">hit</span>]`);
+      this.damage(dmg);
     }
   }
 
@@ -92,7 +145,7 @@ export class Player {
 
   private shoot() {
     if (this.shootCooldown > 0) return;
-    this.shootCooldown = 0.22;
+    this.shootCooldown = P.shootCooldown;
     this.shootAnim = 0.18;
     this.ctx.audio.shoot();
 
@@ -106,7 +159,7 @@ export class Player {
     this.ctx.particles.muzzle(mpos, dir);
 
     if (target && target.alive) {
-      const dmg = target.state === "vulnerable" ? 60 : 26;
+      const dmg = target.state === "vulnerable" ? P.shootDamageVulnerable : P.shootDamage;
       target.takeDamage(dmg, this.pos);
       this.ctx.hud.floatText(target.center(), `[fired]`);
     }
@@ -114,14 +167,14 @@ export class Player {
 
   private slash() {
     if (this.slashCooldown > 0) return;
-    this.slashCooldown = 0.5;
+    this.slashCooldown = P.slashCooldown;
     this.attackAnim = 0.35;
     this.ctx.audio.slash();
     // swap to sword pose briefly
     this.fig.sword.visible = true;
     this.fig.pistol.visible = false;
 
-    const reach = 3.0;
+    const reach = P.slashReach;
     let hitAny = false;
     for (const e of this.ctx.getEnemies()) {
       if (!e.alive) continue;
@@ -136,7 +189,7 @@ export class Player {
             e.takeDamage(999, this.pos);
             this.ctx.hud.floatText(e.center(), `[<span class="b">execution</span>]`, true);
           } else {
-            e.takeDamage(34, this.pos);
+            e.takeDamage(P.slashDamage, this.pos);
             this.ctx.particles.hitSpark(e.center(), 1);
           }
         }
@@ -149,11 +202,17 @@ export class Player {
 
   private dash() {
     if (this.dashCooldown > 0) return;
-    this.dashCooldown = 0.9;
-    this.invuln = 0.35;
+    if (this.stamina < P.staminaDashCost) {
+      this.ctx.hud.floatText(this.chest(), `[<span class="b">exhausted</span>]`);
+      return;
+    }
+    this.stamina -= P.staminaDashCost;
+    this.staminaSpentAt = this.time;
+    this.dashCooldown = P.dashCooldown;
+    this.invuln = P.dashInvuln;
     this.ctx.audio.dash();
     const dir = this.moveDir.lengthSq() > 0 ? this.moveDir.clone() : this.forward();
-    this.vel.addScaledVector(dir.normalize(), 22);
+    this.vel.addScaledVector(dir.normalize(), P.dashImpulse);
     // ink trail
     for (let i = 0; i < 14; i++) this.ctx.particles.emberRise(this.chest());
     this.ctx.hud.floatText(this.chest(), `[dash]`);
@@ -221,9 +280,21 @@ export class Player {
 
     // ---- combat input ----
     const wasBlocking = this.blocking;
-    this.blocking = this.alive && (inp.keys[" "] || inp.rightDown);
+    // can't raise the guard while it's broken
+    this.blocking =
+      this.alive && !this.guardBroken && (inp.keys[" "] || inp.rightDown);
     // stamp the instant the guard goes up, for the perfect-parry window
     if (this.blocking && !wasBlocking) this.blockStartedAt = this.time;
+
+    // ---- stamina (posture) ----
+    if (this.blocking) {
+      this.stamina -= P.staminaBlockDrain * dt;
+      this.staminaSpentAt = this.time;
+      if (this.stamina <= 0) this.guardBreak();
+    } else if (this.time - this.staminaSpentAt > P.staminaRegenDelay) {
+      this.stamina = Math.min(P.maxStamina, this.stamina + P.staminaRegen * dt);
+    }
+    this.ctx.hud.setStamina(this.stamina / P.maxStamina, this.guardBroken);
 
     if (this.alive) {
       if (inp.clickedThisFrame) this.shoot();

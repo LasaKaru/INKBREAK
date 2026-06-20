@@ -33,8 +33,32 @@ npm run preview
 | Aim / orbit camera | `Mouse` (click canvas to lock pointer) |
 | Shoot (pistol) | `Left Click` — auto-locks the nearest target |
 | Slash (sword) | `F` — executes `[open]` enemies instantly |
-| Block / Counter | `Space` or `Right Click` — a *just-in-time* guard becomes `[countered] successful` |
-| Dash (i-frames) | `Shift` |
+| Block / Counter | `Space` or `Right Click` — a *just-in-time* guard becomes `[countered] successful`; holding it drains **posture** |
+| Dash (i-frames) | `Shift` — costs posture |
+| Pause | `Esc` (releases the mouse) |
+
+## v0.2 — "Broken Horizon"
+
+The hall is now broken open onto a surreal monochrome landscape, and combat has
+real depth:
+
+- **Surrounding terrain** (`src/game/Environment.ts`): a vast **ink-water lake**
+  with an animated pencil-ripple shader, two **mountain ranges** of jagged peaks
+  fading into the white horizon, **standing-stone monoliths** rising from the
+  water, and scattered **shore stones** — all glimpsed through the hall's
+  now-ruined arches (`Arena.buildWalls`).
+- **Stamina / posture system**: blocking drains posture; run out and your
+  **guard breaks** (`[guard broken]`), leaving you open. Perfect parries refund
+  posture, rewarding skill.
+- **Hit-stop / time-dilation**: every connect, counter and execution briefly
+  freezes time for punch (`Game` loop + `Balance.feel`).
+- **Ranged gunner enemies**: white figures with pistols now hold range and fire
+  travelling **ink rounds** you can block, deflect or dash through
+  (`src/game/Projectiles.ts`).
+- **Central balance config** (`src/game/balance.ts`): all combat tuning in one
+  data-driven file.
+- **Pause menu + quality presets** (low / medium / high) on the title card, and
+  a **GitHub Pages deploy workflow** (`.github/workflows/deploy.yml`).
 
 ## What matches the source videos
 

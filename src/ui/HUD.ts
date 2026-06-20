@@ -12,6 +12,8 @@ export class HUD {
   private narrative: HTMLElement;
   private waveBanner: HTMLElement;
   private reticle: HTMLElement;
+  private staminaFill: HTMLElement;
+  private staminaWrap: HTMLElement;
   private narrativeTimer = 0;
 
   constructor(private camera: THREE.Camera) {
@@ -21,6 +23,14 @@ export class HUD {
     this.narrative = document.getElementById("narrative")!;
     this.waveBanner = document.getElementById("wave-banner")!;
     this.reticle = document.getElementById("reticle")!;
+    this.staminaFill = document.getElementById("stamina-fill")!;
+    this.staminaWrap = document.getElementById("stamina")!;
+  }
+
+  /** Posture meter, 0..1. Flagged broken when the guard is down. */
+  setStamina(frac: number, broken: boolean) {
+    this.staminaFill.style.width = `${Math.max(0, Math.min(1, frac)) * 100}%`;
+    this.staminaWrap.classList.toggle("broken", broken);
   }
 
   private project(pos: THREE.Vector3): { x: number; y: number; visible: boolean } {

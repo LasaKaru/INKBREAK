@@ -17,4 +17,8 @@ export interface GameContext {
   getEnemies: () => import("./Enemy").Enemy[];
   /** report destruction so prison integrity ticks down */
   onDestruction: (amount: number) => void;
+  /** request a brief global time-dilation (game feel on impacts) */
+  hitStop: (duration: number) => void;
+  /** enemy gunners spawn travelling ink rounds */
+  spawnProjectile: (origin: THREE.Vector3, dir: THREE.Vector3, damage: number) => void;
 }

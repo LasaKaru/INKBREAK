@@ -22,6 +22,9 @@
         <div id="player-status">
           <span class="label">subject //</span>
           <span id="player-health" class="bracket">[100%]</span>
+          <div id="stamina" title="posture">
+            <div id="stamina-fill"></div>
+          </div>
         </div>
 
         <!-- Top-right prison integrity -->
@@ -68,10 +71,28 @@
             A faceless figure. A prison drawn in ink.<br />
             Break it before it redraws you.
           </p>
+          <div class="quality-row">
+            <label for="quality">render</label>
+            <select id="quality">
+              <option value="low">low</option>
+              <option value="medium" selected>medium</option>
+              <option value="high">high</option>
+            </select>
+          </div>
           <button id="start-btn">[ begin ]</button>
           <p class="tiny">
-            best with sound · click to lock mouse · esc to release
+            best with sound · click to lock mouse · esc to pause
           </p>
+        </div>
+      </div>
+
+      <!-- Pause overlay -->
+      <div id="pausecard" class="hidden">
+        <div class="title-inner">
+          <h2>[ paused ]</h2>
+          <p class="flavor">the ink holds its breath.</p>
+          <button id="resume-btn">[ resume ]</button>
+          <button id="restart-btn" class="ghost">[ restart ]</button>
         </div>
       </div>
 

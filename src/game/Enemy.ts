@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { buildFigure, Figure } from "./Characters";
 import { GameContext } from "./types";
+import { Balance } from "./balance";
 
 export type EnemyState = "approach" | "windup" | "strike" | "vulnerable" | "dead";
 
@@ -13,7 +14,7 @@ export type EnemyState = "approach" | "windup" | "strike" | "vulnerable" | "dead
 export class Enemy {
   fig: Figure;
   state: EnemyState = "approach";
-  health = 100;
+  health: number = Balance.enemy.health;
   alive = true;
   pos = new THREE.Vector3();
   private vel = new THREE.Vector3();
@@ -21,12 +22,13 @@ export class Enemy {
   private hasGun: boolean;
   private deathTime = 0;
   private hitFlash = 0;
+  private fireCooldown = Math.random() * Balance.enemy.rangedCooldown;
   walkPhase = Math.random() * Math.PI * 2;
 
-  // tuning
-  readonly attackRange = 2.6;
-  readonly windupTime = 0.85;
-  readonly speed = 2.6;
+  // tuning (from central balance config)
+  readonly attackRange = Balance.enemy.attackRange;
+  readonly windupTime = Balance.enemy.windupTime;
+  readonly speed = Balance.enemy.speed;
 
   constructor(private ctx: GameContext, spawn: THREE.Vector3, hasGun = false) {
     this.fig = buildFigure("enemy");
@@ -53,6 +55,7 @@ export class Enemy {
     this.hitFlash = 0.15;
     this.ctx.particles.inkBurst(this.center(), 0.5);
     this.ctx.audio.hit();
+    this.ctx.hitStop(Balance.feel.hitStop);
 
     // knockback
     const dir = this.pos.clone().sub(from).setY(0).normalize();
@@ -80,8 +83,9 @@ export class Enemy {
     this.ctx.particles.inkBurst(this.center(), 1.4);
     this.ctx.audio.death();
     this.ctx.post.punchFlash(0.35);
+    this.ctx.hitStop(Balance.feel.hitStopHeavy);
     this.ctx.hud.floatText(this.center(), `<span class="b">[erased]</span>`, true);
-    this.ctx.onDestruction(4);
+    this.ctx.onDestruction(Balance.prison.perKill);
   }
 
   update(dt: number, t: number, playerPos: THREE.Vector3, playerBlocking: boolean) {
@@ -112,7 +116,15 @@ export class Enemy {
 
     switch (this.state) {
       case "approach": {
-        if (dist > this.attackRange) {
+        if (this.hasGun && dist < Balance.enemy.rangedFireRange && dist > 5) {
+          // gunner: hold range and fire ink rounds
+          this.fireCooldown -= dt;
+          this.fig.armR.rotation.x = THREE.MathUtils.lerp(this.fig.armR.rotation.x, -1.4, 1 - Math.exp(-dt * 10));
+          if (this.fireCooldown <= 0) {
+            this.fireCooldown = Balance.enemy.rangedCooldown;
+            this.fireRanged(playerPos);
+          }
+        } else if (dist > this.attackRange) {
           this.vel.addScaledVector(toPlayer, this.speed * dt * 6);
           this.animateWalk(t);
         } else {
@@ -181,6 +193,19 @@ export class Enemy {
 
   /** Set by Player to receive strike resolution. */
   static onStrike: ((enemy: Enemy, playerBlocking: boolean) => void) | null = null;
+
+  /** Gunner fires an ink round toward the player. */
+  private fireRanged(playerPos: THREE.Vector3) {
+    const muzzle = this.fig.pistol.getObjectByName("muzzle");
+    const origin = muzzle
+      ? muzzle.getWorldPosition(new THREE.Vector3())
+      : this.center();
+    const target = playerPos.clone().add(new THREE.Vector3(0, 1.2, 0));
+    const dir = target.clone().sub(origin).normalize();
+    this.ctx.particles.muzzle(origin, dir);
+    this.ctx.audio.shoot();
+    this.ctx.spawnProjectile(origin, dir, Balance.enemy.projectileDamage);
+  }
 
   private animateWalk(t: number) {
     const s = Math.sin(t * 9 + this.walkPhase) * 0.5;

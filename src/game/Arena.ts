@@ -173,12 +173,56 @@ export class Arena {
   centralStructure!: THREE.Group;
 
   private buildWalls() {
-    // far walls that fade into the fog — give a sense of a vast hall
-    const wallMat = this.mat(0xc4c1ba, 1);
-    const wall = new THREE.Mesh(new THREE.CylinderGeometry(38, 38, 22, 24, 1, true), wallMat);
-    wall.material.side = THREE.BackSide;
-    wall.position.y = 11;
-    this.group.add(wall);
+    // A ruined outer colonnade with gaps — the hall is broken open so the ink
+    // lake, the standing stones and the mountains beyond are all visible.
+    const stone = this.mat(0xb0ada6);
+    const ringR = 23;
+    const count = 16;
+    for (let i = 0; i < count; i++) {
+      // leave roughly a third of the segments missing / collapsed
+      const roll = (i * 7) % 10;
+      if (roll < 3) continue;
+
+      const a = (i / count) * Math.PI * 2;
+      const x = Math.cos(a) * ringR;
+      const z = Math.sin(a) * ringR;
+      const frame = new THREE.Group();
+
+      const broken = roll < 5; // some arches are snapped short
+      const h = broken ? 5 + Math.random() * 3 : 12;
+
+      const postGeo = new THREE.BoxGeometry(1, h, 1);
+      const left = new THREE.Mesh(postGeo, stone);
+      left.position.set(-1.6, h / 2, 0);
+      left.castShadow = true;
+      const right = new THREE.Mesh(postGeo, stone);
+      right.position.set(1.6, h / 2, 0);
+      right.castShadow = true;
+      frame.add(left, right);
+
+      if (!broken) {
+        // arch lintel on intact frames
+        const beam = new THREE.Mesh(new THREE.BoxGeometry(4.6, 1.1, 1), stone);
+        beam.position.y = h + 0.4;
+        beam.castShadow = true;
+        const arch = new THREE.Mesh(
+          new THREE.TorusGeometry(1.7, 0.5, 6, 12, Math.PI),
+          stone
+        );
+        arch.position.y = h;
+        arch.castShadow = true;
+        frame.add(beam, arch);
+      }
+
+      // rubble at the base
+      const rubble = new THREE.Mesh(new THREE.DodecahedronGeometry(0.8 + Math.random(), 0), stone);
+      rubble.position.set((Math.random() - 0.5) * 3, 0.3, 1 + Math.random());
+      frame.add(rubble);
+
+      frame.position.set(x, 0, z);
+      frame.lookAt(0, h / 2, 0);
+      this.group.add(frame);
+    }
   }
 
   update(dt: number, t: number) {

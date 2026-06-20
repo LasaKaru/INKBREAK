@@ -2,10 +2,13 @@ import * as THREE from "three";
 import { Input } from "./Input";
 import { Particles } from "./Particles";
 import { Arena } from "./Arena";
+import { Environment } from "./Environment";
 import { Sharks } from "./Sharks";
 import { VoidSmoke } from "./VoidSmoke";
 import { Player } from "./Player";
 import { EnemyManager } from "./EnemyManager";
+import { Projectiles } from "./Projectiles";
+import { Balance } from "./balance";
 import { HUD } from "../ui/HUD";
 import { Audio } from "../audio/Audio";
 import { Postprocessing } from "../render/Postprocessing";
@@ -29,17 +32,21 @@ export class Game {
   private post: Postprocessing;
 
   private arena: Arena;
+  private environment: Environment;
   private sharks: Sharks;
   private voidSmoke: VoidSmoke;
   private player: Player;
   private enemies: EnemyManager;
+  private projectiles: Projectiles;
   private ctx: GameContext;
 
   private prisonIntegrity = 100;
   private started = false;
   private gameOver = false;
+  private paused = false;
   private elapsed = 0;
   private emberTimer = 0;
+  private hitStopTimer = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     // ---- renderer ----
@@ -52,7 +59,8 @@ export class Game {
     // ---- scene ----
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0xe9e7e1);
-    this.scene.fog = new THREE.Fog(0xe9e7e1, 24, 64);
+    // deeper fog so the hall stays crisp but mountains wash toward the white horizon
+    this.scene.fog = new THREE.Fog(0xe9e7e1, 36, 200);
 
     // ---- camera ----
     this.camera = new THREE.PerspectiveCamera(
@@ -74,6 +82,8 @@ export class Game {
     this.post = new Postprocessing(this.renderer, this.scene, this.camera);
 
     // ---- world ----
+    this.environment = new Environment();
+    this.scene.add(this.environment.group);
     this.arena = new Arena();
     this.scene.add(this.arena.group);
     this.sharks = new Sharks(4);
@@ -92,8 +102,14 @@ export class Game {
       post: this.post,
       getEnemies: () => this.enemies.enemies,
       onDestruction: (a) => this.tickIntegrity(a),
+      hitStop: (d) => {
+        this.hitStopTimer = Math.max(this.hitStopTimer, d);
+      },
+      spawnProjectile: (origin, dir, dmg) => this.projectiles.spawn(origin, dir, dmg),
     };
 
+    this.projectiles = new Projectiles(Balance.enemy.projectileSpeed);
+    this.scene.add(this.projectiles.group);
     this.player = new Player(this.ctx);
     this.enemies = new EnemyManager(this.ctx, () => this.player.pos);
 
@@ -137,18 +153,53 @@ export class Game {
   private bindStart(canvas: HTMLCanvasElement) {
     const titlecard = document.getElementById("titlecard")!;
     const btn = document.getElementById("start-btn")!;
+    const quality = document.getElementById("quality") as HTMLSelectElement;
     btn.addEventListener("click", () => {
       this.audio.init();
+      this.applyQuality(quality.value);
       titlecard.classList.add("hidden");
       this.input.requestLock();
       this.beginIntro();
     });
-    // also re-lock the pointer on click during play
+    // re-lock the pointer on click during play
     canvas.addEventListener("click", () => {
-      if (this.started && !this.input.pointerLocked && !this.gameOver) {
+      if (this.started && !this.input.pointerLocked && !this.gameOver && !this.paused) {
         this.input.requestLock();
       }
     });
+
+    // ---- pause handling: losing pointer lock mid-combat pauses ----
+    const pausecard = document.getElementById("pausecard")!;
+    document.addEventListener("pointerlockchange", () => {
+      if (!this.started || this.gameOver) return;
+      if (!this.input.pointerLocked) {
+        this.paused = true;
+        pausecard.classList.remove("hidden");
+      }
+    });
+    document.getElementById("resume-btn")!.addEventListener("click", () => {
+      pausecard.classList.add("hidden");
+      this.paused = false;
+      this.input.requestLock();
+    });
+    document.getElementById("restart-btn")!.addEventListener("click", () => {
+      location.reload();
+    });
+  }
+
+  /** Quality presets: trade fidelity for frame-rate on weaker devices. */
+  private applyQuality(level: string) {
+    if (level === "low") {
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
+      this.renderer.shadowMap.enabled = false;
+    } else if (level === "high") {
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      this.renderer.shadowMap.enabled = true;
+    } else {
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      this.renderer.shadowMap.enabled = true;
+    }
+    this.onResize();
   }
 
   /** Cinematic intro: ink wipe + opening monologue, then the first wave. */
@@ -229,7 +280,22 @@ export class Game {
 
   private loop = () => {
     requestAnimationFrame(this.loop);
-    const dt = Math.min(this.clock.getDelta(), 0.05);
+    const realDt = Math.min(this.clock.getDelta(), 0.05);
+
+    // paused: hold the frame, keep grain alive but freeze gameplay
+    if (this.paused) {
+      this.input.endFrame();
+      this.post.render();
+      return;
+    }
+
+    // hit-stop: dilate gameplay time briefly on impacts for punch
+    let scale = 1;
+    if (this.hitStopTimer > 0) {
+      this.hitStopTimer -= realDt;
+      scale = 0.04; // Balance.feel.timeScaleFloor
+    }
+    const dt = realDt * scale;
     this.elapsed += dt;
     const t = this.elapsed;
 
@@ -243,6 +309,12 @@ export class Game {
     if (!this.gameOver) {
       this.player.update(dt, t);
       this.enemies.update(dt, t, this.player.blockingState);
+      this.projectiles.update(
+        dt,
+        this.player.pos,
+        (dmg, from) => this.player.resolveProjectile(dmg, from),
+        (at) => this.particles.hitSpark(at, 0.5)
+      );
       if (!this.player.alive && !this.gameOver) this.lose();
     } else {
       // keep the camera drifting for the end card
@@ -251,6 +323,7 @@ export class Game {
     }
 
     this.arena.update(dt, t);
+    this.environment.update(dt, t);
     this.sharks.update(dt, t);
     this.voidSmoke.update(dt, t);
     this.particles.update(dt);
