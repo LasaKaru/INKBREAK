@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>INKBREAK</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Shadows+Into+Light&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="scene"></canvas>
+
+      <!-- HUD overlay (HTML/CSS for crisp text + perf) -->
+      <div id="hud">
+        <!-- Top-left player health -->
+        <div id="player-status">
+          <span class="label">subject //</span>
+          <span id="player-health" class="bracket">[100%]</span>
+        </div>
+
+        <!-- Top-right prison integrity -->
+        <div id="prison-status">
+          <span class="label">the prison stands firm at</span>
+          <span id="prison-integrity" class="bracket">[100%]</span>
+        </div>
+
+        <!-- Wave / objective banner -->
+        <div id="wave-banner"></div>
+
+        <!-- Center reticle -->
+        <div id="reticle">
+          <svg viewBox="0 0 100 100" width="100" height="100">
+            <circle cx="50" cy="50" r="34" class="ret-ring" />
+            <path d="M50 8 L57 18 L43 18 Z" class="ret-mark" />
+            <rect x="44" y="44" width="12" height="12" class="ret-diamond" />
+          </svg>
+        </div>
+
+        <!-- Layer for floating world-space combat text -->
+        <div id="floaters"></div>
+
+        <!-- Bottom narrative / internal monologue -->
+        <div id="narrative"></div>
+
+        <!-- Bottom-left signature, matching the videos' watermark vibe -->
+        <div id="signature">INKBREAK — a sketch in motion</div>
+
+        <!-- Controls hint -->
+        <div id="controls-hint">
+          <b>WASD</b> move &nbsp;·&nbsp; <b>Mouse</b> aim &nbsp;·&nbsp;
+          <b>L-Click</b> shoot &nbsp;·&nbsp; <b>F</b> slash &nbsp;·&nbsp;
+          <b>Space</b> block &nbsp;·&nbsp; <b>Shift</b> dash
+        </div>
+      </div>
+
+      <!-- Title / start screen -->
+      <div id="titlecard">
+        <div class="title-inner">
+          <h1>INKBREAK</h1>
+          <p class="subtitle">a sketch in motion</p>
+          <p class="flavor">
+            A faceless figure. A prison drawn in ink.<br />
+            Break it before it redraws you.
+          </p>
+          <button id="start-btn">[ begin ]</button>
+          <p class="tiny">
+            best with sound · click to lock mouse · esc to release
+          </p>
+        </div>
+      </div>
+
+      <!-- Ink wipe transition layer -->
+      <div id="inkwipe"></div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

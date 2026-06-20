@@ -1,0 +1,365 @@
+:root {
+  --ink: #14110f;
+  --paper: #e9e7e1;
+  --gray: #6c6a66;
+  --line: #2a2724;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Special Elite", "Courier New", monospace;
+  cursor: crosshair;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+}
+
+#scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ---------------- HUD ---------------- */
+#hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  /* faint paper grain over the whole UI */
+  mix-blend-mode: normal;
+}
+
+.bracket {
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+#player-status,
+#prison-status {
+  position: absolute;
+  top: 22px;
+  font-size: 15px;
+  text-transform: lowercase;
+  letter-spacing: 1px;
+  opacity: 0.85;
+  text-shadow: 0 1px 0 rgba(233, 231, 225, 0.6);
+}
+
+#player-status {
+  left: 26px;
+}
+
+#prison-status {
+  right: 26px;
+  text-align: right;
+}
+
+#player-status .label,
+#prison-status .label {
+  color: var(--gray);
+  font-size: 12px;
+  margin-right: 6px;
+}
+
+#player-health,
+#prison-integrity {
+  font-size: 18px;
+}
+
+#player-health.hurt {
+  animation: shake 0.25s linear;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+
+/* Wave banner */
+#wave-banner {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  font-family: "Shadows Into Light", cursive;
+  font-size: 34px;
+  letter-spacing: 2px;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  color: var(--ink);
+}
+
+#wave-banner.show {
+  opacity: 1;
+}
+
+#wave-banner .sub {
+  display: block;
+  font-family: "Special Elite", monospace;
+  font-size: 15px;
+  letter-spacing: 3px;
+  color: var(--gray);
+  margin-top: 6px;
+}
+
+/* Reticle */
+#reticle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100px;
+  height: 100px;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.18s ease, transform 0.12s ease;
+}
+
+#reticle.active {
+  opacity: 0.9;
+}
+
+#reticle.locked .ret-ring {
+  stroke-dasharray: 6 4;
+  animation: spin 6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+#reticle svg .ret-ring {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  transform-origin: 50px 50px;
+}
+
+#reticle svg .ret-mark {
+  fill: var(--ink);
+}
+
+#reticle svg .ret-diamond {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  transform: rotate(45deg);
+  transform-origin: 50px 50px;
+}
+
+/* Floating combat text */
+#floaters {
+  position: absolute;
+  inset: 0;
+}
+
+.floater {
+  position: absolute;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  color: var(--ink);
+  text-shadow: 0 1px 2px rgba(233, 231, 225, 0.8);
+  animation: floatup 1.1s ease-out forwards;
+}
+
+.floater .b {
+  font-weight: bold;
+}
+
+.floater.big {
+  font-size: 22px;
+}
+
+.floater.enemyhp {
+  font-size: 13px;
+  opacity: 0.8;
+  animation: none;
+}
+
+@keyframes floatup {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -40%) scale(0.9);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -120%) scale(1);
+  }
+}
+
+/* Narrative monologue */
+#narrative {
+  position: absolute;
+  bottom: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(760px, 86vw);
+  text-align: center;
+  font-family: "Shadows Into Light", cursive;
+  font-size: 26px;
+  line-height: 1.35;
+  color: var(--ink);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  text-shadow: 0 1px 0 rgba(233, 231, 225, 0.7);
+}
+
+#narrative.show {
+  opacity: 0.95;
+}
+
+#narrative .said {
+  display: block;
+  font-family: "Special Elite", monospace;
+  font-size: 14px;
+  letter-spacing: 1px;
+  color: var(--gray);
+  margin-top: 8px;
+}
+
+#signature {
+  position: absolute;
+  bottom: 16px;
+  left: 20px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--gray);
+  opacity: 0.6;
+}
+
+#controls-hint {
+  position: absolute;
+  bottom: 16px;
+  right: 20px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--gray);
+  opacity: 0.7;
+}
+
+#controls-hint b {
+  color: var(--ink);
+}
+
+/* ---------------- Title card ---------------- */
+#titlecard {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(
+    circle at 50% 40%,
+    rgba(233, 231, 225, 0.4),
+    rgba(233, 231, 225, 0.92) 70%
+  );
+  transition: opacity 0.8s ease;
+}
+
+#titlecard.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.title-inner {
+  text-align: center;
+}
+
+.title-inner h1 {
+  font-size: clamp(56px, 12vw, 140px);
+  letter-spacing: 12px;
+  font-weight: 400;
+  color: var(--ink);
+  text-shadow: 3px 3px 0 rgba(20, 17, 15, 0.12);
+}
+
+.title-inner .subtitle {
+  font-family: "Shadows Into Light", cursive;
+  font-size: 26px;
+  color: var(--gray);
+  margin-top: -6px;
+  letter-spacing: 4px;
+}
+
+.title-inner .flavor {
+  margin-top: 26px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink);
+  opacity: 0.8;
+}
+
+#start-btn {
+  margin-top: 34px;
+  background: transparent;
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  font-family: "Special Elite", monospace;
+  font-size: 20px;
+  letter-spacing: 3px;
+  padding: 12px 34px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+#start-btn:hover {
+  background: var(--ink);
+  color: var(--paper);
+  transform: translateY(-2px);
+}
+
+.title-inner .tiny {
+  margin-top: 18px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--gray);
+}
+
+/* ---------------- Ink wipe ---------------- */
+#inkwipe {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  background: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s ease;
+}
+
+#inkwipe.on {
+  opacity: 1;
+}

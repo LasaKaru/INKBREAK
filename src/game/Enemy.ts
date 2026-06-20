@@ -1,0 +1,200 @@
+import * as THREE from "three";
+import { buildFigure, Figure } from "./Characters";
+import { GameContext } from "./types";
+
+export type EnemyState = "approach" | "windup" | "strike" | "vulnerable" | "dead";
+
+/**
+ * A minimalist white enemy figure with a small combat state machine:
+ *   approach -> windup (telegraph) -> strike -> (recover) -> approach
+ * Getting countered or shot mid-windup drops it into a `vulnerable` stun,
+ * the opening for an execution.
+ */
+export class Enemy {
+  fig: Figure;
+  state: EnemyState = "approach";
+  health = 100;
+  alive = true;
+  pos = new THREE.Vector3();
+  private vel = new THREE.Vector3();
+  private timer = 0;
+  private hasGun: boolean;
+  private deathTime = 0;
+  private hitFlash = 0;
+  walkPhase = Math.random() * Math.PI * 2;
+
+  // tuning
+  readonly attackRange = 2.6;
+  readonly windupTime = 0.85;
+  readonly speed = 2.6;
+
+  constructor(private ctx: GameContext, spawn: THREE.Vector3, hasGun = false) {
+    this.fig = buildFigure("enemy");
+    this.hasGun = hasGun;
+    this.fig.pistol.visible = hasGun;
+    this.fig.sword.visible = !hasGun;
+    this.pos.copy(spawn);
+    this.fig.root.position.copy(spawn);
+    ctx.scene.add(this.fig.root);
+  }
+
+  get group() {
+    return this.fig.root;
+  }
+
+  /** Center-of-mass world point for targeting / VFX. */
+  center(out = new THREE.Vector3()) {
+    return out.copy(this.pos).add(new THREE.Vector3(0, 1.2, 0));
+  }
+
+  takeDamage(amount: number, from: THREE.Vector3) {
+    if (!this.alive) return;
+    this.health -= amount;
+    this.hitFlash = 0.15;
+    this.ctx.particles.inkBurst(this.center(), 0.5);
+    this.ctx.audio.hit();
+
+    // knockback
+    const dir = this.pos.clone().sub(from).setY(0).normalize();
+    this.vel.addScaledVector(dir, 3);
+
+    if (this.health <= 0) {
+      this.die();
+    } else {
+      this.ctx.hud.floatText(this.center(), `[${Math.max(0, Math.round(this.health))}%]`);
+    }
+  }
+
+  /** Force a stun opening (used on counter). */
+  stagger(duration = 2) {
+    if (!this.alive) return;
+    this.state = "vulnerable";
+    this.timer = duration;
+    this.ctx.hud.floatText(this.center(), `enemy is <span class="b">[open]</span>`);
+  }
+
+  private die() {
+    this.alive = false;
+    this.state = "dead";
+    this.deathTime = 0;
+    this.ctx.particles.inkBurst(this.center(), 1.4);
+    this.ctx.audio.death();
+    this.ctx.post.punchFlash(0.35);
+    this.ctx.hud.floatText(this.center(), `<span class="b">[erased]</span>`, true);
+    this.ctx.onDestruction(4);
+  }
+
+  update(dt: number, t: number, playerPos: THREE.Vector3, playerBlocking: boolean) {
+    if (this.hitFlash > 0) this.hitFlash -= dt;
+
+    if (this.state === "dead") {
+      // crumple: sink + topple, then fade out
+      this.deathTime += dt;
+      this.fig.root.rotation.x = Math.min(Math.PI / 2, this.deathTime * 3);
+      this.fig.root.position.y = -Math.min(1, this.deathTime * 0.8);
+      const k = Math.max(0, 1 - this.deathTime / 1.6);
+      this.fig.root.scale.setScalar(k);
+      if (this.deathTime > 1.6) this.dispose();
+      return;
+    }
+
+    const toPlayer = playerPos.clone().sub(this.pos).setY(0);
+    const dist = toPlayer.length();
+    toPlayer.normalize();
+
+    // face the player
+    const targetYaw = Math.atan2(toPlayer.x, toPlayer.z);
+    this.fig.root.rotation.y = THREE.MathUtils.lerp(
+      this.fig.root.rotation.y,
+      targetYaw,
+      1 - Math.exp(-dt * 8)
+    );
+
+    switch (this.state) {
+      case "approach": {
+        if (dist > this.attackRange) {
+          this.vel.addScaledVector(toPlayer, this.speed * dt * 6);
+          this.animateWalk(t);
+        } else {
+          this.state = "windup";
+          this.timer = this.windupTime;
+          this.ctx.hud.floatText(this.center(), `attack [<span class="b">incoming</span>]`);
+        }
+        break;
+      }
+      case "windup": {
+        this.timer -= dt;
+        // raise weapon as a telegraph
+        this.fig.armR.rotation.x = THREE.MathUtils.lerp(this.fig.armR.rotation.x, -2.2, 1 - Math.exp(-dt * 10));
+        if (this.timer <= 0) {
+          this.state = "strike";
+          this.timer = 0.25;
+          this.resolveStrike(dist, playerBlocking);
+        }
+        break;
+      }
+      case "strike": {
+        this.timer -= dt;
+        this.fig.armR.rotation.x = THREE.MathUtils.lerp(this.fig.armR.rotation.x, 0.4, 1 - Math.exp(-dt * 20));
+        if (this.timer <= 0) {
+          this.state = "approach";
+        }
+        break;
+      }
+      case "vulnerable": {
+        this.timer -= dt;
+        // slumped, swaying
+        this.fig.root.rotation.z = Math.sin(t * 6) * 0.12;
+        this.fig.armR.rotation.x = THREE.MathUtils.lerp(this.fig.armR.rotation.x, 0.2, 1 - Math.exp(-dt * 6));
+        if (this.timer <= 0) {
+          this.state = "approach";
+          this.fig.root.rotation.z = 0;
+        }
+        break;
+      }
+    }
+
+    // integrate movement
+    this.vel.multiplyScalar(1 - 6 * dt);
+    this.pos.addScaledVector(this.vel, dt);
+    this.pos.y = 0;
+    this.fig.root.position.x = this.pos.x;
+    this.fig.root.position.z = this.pos.z;
+
+    // hit flash tint
+    const flash = this.hitFlash > 0 ? 1 : 0;
+    for (const m of this.fig.materials) {
+      m.emissive.setScalar(flash * 0.6);
+    }
+  }
+
+  /** Did the player block / counter this strike, or take the hit? */
+  private resolveStrike(dist: number, playerBlocking: boolean) {
+    if (dist > this.attackRange + 0.8) {
+      // player escaped the range
+      return;
+    }
+    // The Player resolves the actual block/counter outcome and damage; the
+    // enemy just signals intent. We emit an event via a global hook.
+    Enemy.onStrike?.(this, playerBlocking);
+  }
+
+  /** Set by Player to receive strike resolution. */
+  static onStrike: ((enemy: Enemy, playerBlocking: boolean) => void) | null = null;
+
+  private animateWalk(t: number) {
+    const s = Math.sin(t * 9 + this.walkPhase) * 0.5;
+    this.fig.legL.rotation.x = s;
+    this.fig.legR.rotation.x = -s;
+    this.fig.armL.rotation.x = -s * 0.6;
+    if (this.state !== "windup") this.fig.armR.rotation.x = s * 0.6;
+  }
+
+  dispose() {
+    if (this.fig.root.parent) this.fig.root.parent.remove(this.fig.root);
+    this.fig.root.traverse((o: THREE.Object3D) => {
+      const m = o as THREE.Mesh;
+      if (m.geometry) m.geometry.dispose();
+    });
+  }
+}
