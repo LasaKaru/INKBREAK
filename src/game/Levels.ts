@@ -28,6 +28,8 @@ export interface LevelConfig {
   monoliths: number;
   shoreStones: number;
   crates: number;
+  pits: number;
+  spikes: number;
 
   // atmosphere
   bg: number;
@@ -58,6 +60,8 @@ export const LEVELS: LevelConfig[] = [
     monoliths: 16,
     shoreStones: 50,
     crates: 12,
+    pits: 2,
+    spikes: 2,
     bg: 0xf4f3ef,
     fogNear: 60,
     fogFar: 260,
@@ -82,6 +86,8 @@ export const LEVELS: LevelConfig[] = [
     monoliths: 30,
     shoreStones: 26,
     crates: 7,
+    pits: 4,
+    spikes: 1,
     bg: 0xeeece7,
     fogNear: 34,
     fogFar: 150,
@@ -106,6 +112,8 @@ export const LEVELS: LevelConfig[] = [
     monoliths: 8,
     shoreStones: 70,
     crates: 16,
+    pits: 3,
+    spikes: 3,
     bg: 0xf7f6f2,
     fogNear: 90,
     fogFar: 340,
@@ -130,6 +138,8 @@ export const LEVELS: LevelConfig[] = [
     monoliths: 4,
     shoreStones: 18,
     crates: 6,
+    pits: 1,
+    spikes: 2,
     bg: 0xe7e5e0,
     fogNear: 18,
     fogFar: 80,

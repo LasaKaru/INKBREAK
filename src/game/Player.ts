@@ -57,6 +57,9 @@ export class Player {
   // play-area radius (set per level)
   boundary = 44;
 
+  // external movement slow (e.g. standing in an ink pit); 1 = normal
+  externalSlow = 1;
+
   constructor(private ctx: GameContext) {
     this.fig = buildFigure("player");
     this.fig.root.position.copy(this.pos);
@@ -408,7 +411,7 @@ export class Player {
     }
     if (this.moveDir.lengthSq() > 0) {
       this.moveDir.normalize();
-      this.vel.addScaledVector(this.moveDir, this.speed * dt * 10);
+      this.vel.addScaledVector(this.moveDir, this.speed * this.externalSlow * dt * 10);
     }
 
     // ---- combat input ----

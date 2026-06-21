@@ -41,6 +41,8 @@ Legend — Effort: `S` ≤1 day · `M` a few days · `L` ~1–2 weeks · `XL` 3+
 - **v0.9 "Break & Advance"** — **destructible cover** (crates block you, absorb
   ink rounds, shatter into ink) and **campaign progression** (clear a world to
   unlock the next; locked worlds in the select screen; persists).
+- **v0.10 "Hazards"** — **ink pits** (slow + damage-over-time to player *and*
+  enemies) and telegraphed **spike traps** (burst damage), per-level.
 
 ---
 
@@ -52,8 +54,8 @@ Status: ✅ done · 🔜 next up · ⬜ todo · ⚙️ needs backend. Effort S/M
 - ✅ Bigger ground / larger play area
 - ✅ Multiple worlds + world-select screen
 - ✅ Destructible cover & props (crates block you / absorb fire / shatter into ink)
-- 🔜 Hazards (ink pits, collapsing floor, spike traps) — M
-- ⬜ Interactive objects (levers, breakable cages release pickups) — M
+- ✅ Hazards — ink pits (slow + DoT) and spike traps (collapsing floor still todo)
+- 🔜 Interactive objects (levers, breakable cages release pickups) — M
 - ⬜ Weather / atmosphere layers (rain streaks, ink-fog banks, wind) — M
 - ⬜ Day/night or "page-aging" lighting shifts — M
 - ⬜ Procedural arena variation (seeded layouts) — L

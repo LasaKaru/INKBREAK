@@ -13,6 +13,7 @@ import { Boss } from "./Boss";
 import { Settings, SettingsState } from "./Settings";
 import { Shop } from "./Shop";
 import { Destructibles } from "./Destructibles";
+import { Hazards } from "./Hazards";
 import { LEVELS, LevelConfig, getLevel } from "./Levels";
 import { Balance } from "./balance";
 import { HUD } from "../ui/HUD";
@@ -41,6 +42,7 @@ export class Game {
   private arena!: Arena;
   private environment!: Environment;
   private destructibles!: Destructibles;
+  private hazards!: Hazards;
   private currentLevel: LevelConfig = getLevel(localStorage.getItem("inkbreak.level") || "prison");
   private unlocked: Set<string> = this.loadUnlocked();
   private sharks: Sharks;
@@ -388,6 +390,13 @@ export class Game {
     );
     this.scene.add(this.destructibles.group);
 
+    if (this.hazards) {
+      this.scene.remove(this.hazards.group);
+      this.hazards.dispose();
+    }
+    this.hazards = new Hazards(cfg.pits, cfg.spikes, cfg.boundary);
+    this.scene.add(this.hazards.group);
+
     this.scene.background = new THREE.Color(cfg.bg);
     this.scene.fog = new THREE.Fog(cfg.bg, cfg.fogNear, cfg.fogFar);
     this.player.boundary = cfg.boundary;
@@ -558,6 +567,13 @@ export class Game {
         (at) => this.destructibles.absorb(at, 20)
       );
       this.pickups.update(dt, t, this.player.pos);
+
+      // ---- hazards (ink pits + spike traps) ----
+      this.hazards.update(dt, this.player.pos, this.enemies.enemies, {
+        hurtPlayer: (n) => this.player.damage(n),
+        slowPlayer: (f) => (this.player.externalSlow = f),
+        spark: (p, s) => this.particles.hitSpark(p, s),
+      });
 
       // ---- boss ---- (keep updating through the death animation)
       if (this.boss) {

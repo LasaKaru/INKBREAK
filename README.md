@@ -40,6 +40,15 @@ npm run preview
 | Inventory | `Tab` (pauses; click to equip) |
 | Pause | `Esc` (releases the mouse) |
 
+## v0.10 — "Hazards"
+
+- **Ink pits** (`src/game/Hazards.ts`): dark pools on the floor that **slow you**
+  and deal **damage over time** — to **enemies too**, so you can lure foes in.
+- **Spike traps**: telegraphed plates that shudder, then erupt for heavy burst
+  damage to anything standing on them (you or enemies), then reset.
+- Per-level hazard counts, rebuilt with the world; dashing's i-frames carry you
+  through safely.
+
 ## v0.9 — "Break & Advance"
 
 - **Destructible cover** (`src/game/Destructibles.ts`): crates scattered per
