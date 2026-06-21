@@ -30,6 +30,8 @@ export interface LevelConfig {
   crates: number;
   pits: number;
   spikes: number;
+  objective: "survive" | "shatter";
+  shrines: number;
 
   // atmosphere
   bg: number;
@@ -62,6 +64,8 @@ export const LEVELS: LevelConfig[] = [
     crates: 12,
     pits: 2,
     spikes: 2,
+    objective: "survive",
+    shrines: 0,
     bg: 0xf4f3ef,
     fogNear: 60,
     fogFar: 260,
@@ -88,6 +92,8 @@ export const LEVELS: LevelConfig[] = [
     crates: 7,
     pits: 4,
     spikes: 1,
+    objective: "shatter",
+    shrines: 4,
     bg: 0xeeece7,
     fogNear: 34,
     fogFar: 150,
@@ -114,6 +120,8 @@ export const LEVELS: LevelConfig[] = [
     crates: 16,
     pits: 3,
     spikes: 3,
+    objective: "shatter",
+    shrines: 3,
     bg: 0xf7f6f2,
     fogNear: 90,
     fogFar: 340,
@@ -140,6 +148,8 @@ export const LEVELS: LevelConfig[] = [
     crates: 6,
     pits: 1,
     spikes: 2,
+    objective: "survive",
+    shrines: 0,
     bg: 0xe7e5e0,
     fogNear: 18,
     fogFar: 80,

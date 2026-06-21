@@ -14,6 +14,8 @@ export class EnemyManager {
   private spawning = false;
   private bossTriggered = false;
   wavesBeforeBoss = 3;
+  /** Game decides when the boss may appear (waves cleared and/or objective done). */
+  bossReady: () => boolean = () => this.wave >= this.wavesBeforeBoss;
 
   // narrative beats keyed to wave clears
   private quips = [
@@ -72,7 +74,7 @@ export class EnemyManager {
 
   /** Resume after the shop intermission — next wave, or the boss. */
   proceed() {
-    if (this.wave >= this.wavesBeforeBoss) {
+    if (this.bossReady()) {
       this.bossTriggered = true;
       this.onBossTime();
     } else {

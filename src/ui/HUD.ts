@@ -19,6 +19,7 @@ export class HUD {
   private bossFill: HTMLElement;
   private bossName: HTMLElement;
   private combo: HTMLElement;
+  private objective: HTMLElement;
   private narrativeTimer = 0;
 
   constructor(private camera: THREE.Camera) {
@@ -35,6 +36,13 @@ export class HUD {
     this.bossFill = document.getElementById("boss-fill")!;
     this.bossName = document.getElementById("boss-name")!;
     this.combo = document.getElementById("combo")!;
+    this.objective = document.getElementById("objective")!;
+  }
+
+  /** Current objective line under the prison meter (empty string hides it). */
+  setObjective(text: string) {
+    this.objective.innerHTML = text;
+    this.objective.classList.toggle("show", text.length > 0);
   }
 
   /** Melee flow meter. count<2 hides it; finisher pulses it. */

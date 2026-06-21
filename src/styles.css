@@ -84,6 +84,23 @@ body {
   font-size: 18px;
 }
 
+#objective {
+  margin-top: 8px;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: var(--ink);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#objective.show {
+  opacity: 0.9;
+}
+
+#objective b {
+  font-weight: bold;
+}
+
 #player-health.hurt {
   animation: shake 0.25s linear;
 }

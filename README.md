@@ -40,6 +40,16 @@ npm run preview
 | Inventory | `Tab` (pauses; click to equip) |
 | Pause | `Esc` (releases the mouse) |
 
+## v0.12 — "Objectives"
+
+- **Interactive ink shrines** (`src/game/Interactables.ts`): obelisks with a
+  pulsing white core that block movement and must be **shattered with melee /
+  finishers / the blade-dash**, bursting ink and dropping a reward.
+- **Per-level objectives**: some worlds (Drowned Gallery, White Wastes) require
+  you to **shatter every shrine before the Warden will appear** — tracked in the
+  HUD (`objective · shatter the ink shrines [2/4]`). Others stay survive-to-boss.
+  The boss now gates on a per-level `bossReady` condition.
+
 ## v0.11 — "Cartoon Cut" (HelaO2 Studio)
 
 - **Cartoon look by default**: a new **`cartoon`** render preset (bright,

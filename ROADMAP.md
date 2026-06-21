@@ -46,6 +46,9 @@ Legend — Effort: `S` ≤1 day · `M` a few days · `L` ~1–2 weeks · `XL` 3+
 - **v0.11 "Cartoon Cut"** — bright **cartoon/cel** default look (3-tone bands +
   bold ink outlines, no grain/vignette), **HelaO2 Studio** branding (splash +
   credits), and a **blade-flight dash** that slices enemies you sweep through.
+- **v0.12 "Objectives"** — **interactive ink shrines** (shatter with the blade)
+  and **per-level objectives** (clear all shrines to summon the Warden), with a
+  HUD objective tracker and per-level boss-ready gating.
 
 ---
 
@@ -58,7 +61,7 @@ Status: ✅ done · 🔜 next up · ⬜ todo · ⚙️ needs backend. Effort S/M
 - ✅ Multiple worlds + world-select screen
 - ✅ Destructible cover & props (crates block you / absorb fire / shatter into ink)
 - ✅ Hazards — ink pits (slow + DoT) and spike traps (collapsing floor still todo)
-- 🔜 Interactive objects (levers, breakable cages release pickups) — M
+- ✅ Interactive objects — ink shrines (shatter to progress) [levers/cages still todo]
 - ⬜ Weather / atmosphere layers (rain streaks, ink-fog banks, wind) — M
 - ⬜ Day/night or "page-aging" lighting shifts — M
 - ⬜ Procedural arena variation (seeded layouts) — L
@@ -66,7 +69,7 @@ Status: ✅ done · 🔜 next up · ⬜ todo · ⚙️ needs backend. Effort S/M
 ### Worlds / Levels / Progression
 - ✅ Level/location select
 - ✅ Campaign progression (beat a world → unlock the next, persisted)
-- 🔜 Per-level objectives (survive N, defend point, hunt target) — M
+- ✅ Per-level objectives — shatter-the-shrines (defend/hunt variants todo)
 - ⬜ Hub world / sketchbook map between levels — L
 - ⬜ Endless & time-attack modes with scoring — M
 - ⬜ Daily seeded run — M

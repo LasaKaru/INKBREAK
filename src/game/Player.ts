@@ -270,10 +270,13 @@ export class Player {
       }
     }
 
-    // melee also smashes cover
+    // melee also smashes cover + shrines
     const cover = this.ctx.getDestructibles();
-    if (finisher) cover.damageArea(this.pos, reach, dmg);
-    else cover.damageArea(this.pos.clone().addScaledVector(this.forward(), reach * 0.5), reach * 0.6, dmg);
+    const shrines = this.ctx.getInteractables();
+    const aoe = finisher ? this.pos.clone() : this.pos.clone().addScaledVector(this.forward(), reach * 0.5);
+    const aoeR = finisher ? reach : reach * 0.6;
+    cover.damageArea(aoe, aoeR, dmg);
+    shrines.damageArea(aoe, aoeR, dmg);
 
     if (finisher && hitAny) {
       // ink-wave payoff: knockback, screen punch, style reward
@@ -379,8 +382,9 @@ export class Player {
         }
       }
     }
-    // shear cover on the way through
+    // shear cover + shrines on the way through
     this.ctx.getDestructibles().damageArea(this.pos, reach, 30);
+    this.ctx.getInteractables().damageArea(this.pos, reach, 30);
     this.ctx.particles.emberRise(this.chest());
   }
 
@@ -514,8 +518,9 @@ export class Player {
       this.pos.x *= maxR / r2;
       this.pos.z *= maxR / r2;
     }
-    // push out of destructible cover
+    // push out of destructible cover + shrines
     this.ctx.getDestructibles().resolveCollision(this.pos, 0.5);
+    this.ctx.getInteractables().resolveCollision(this.pos, 0.5);
     this.fig.root.position.copy(this.pos);
 
     // ---- targeting ----

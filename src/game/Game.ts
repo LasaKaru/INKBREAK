@@ -13,6 +13,7 @@ import { Boss } from "./Boss";
 import { Settings, SettingsState } from "./Settings";
 import { Shop } from "./Shop";
 import { Destructibles } from "./Destructibles";
+import { Interactables } from "./Interactables";
 import { Hazards } from "./Hazards";
 import { LEVELS, LevelConfig, getLevel } from "./Levels";
 import { Balance } from "./balance";
@@ -42,6 +43,7 @@ export class Game {
   private arena!: Arena;
   private environment!: Environment;
   private destructibles!: Destructibles;
+  private interactables!: Interactables;
   private hazards!: Hazards;
   private currentLevel: LevelConfig = getLevel(localStorage.getItem("inkbreak.level") || "prison");
   private unlocked: Set<string> = this.loadUnlocked();
@@ -123,6 +125,7 @@ export class Game {
       summonEnemies: (n) => this.enemies.summon(n),
       getBoss: () => this.boss,
       getDestructibles: () => this.destructibles,
+      getInteractables: () => this.interactables,
     };
 
     this.projectiles = new Projectiles(Balance.enemy.projectileSpeed);
@@ -397,12 +400,64 @@ export class Game {
     this.hazards = new Hazards(cfg.pits, cfg.spikes, cfg.boundary);
     this.scene.add(this.hazards.group);
 
+    if (this.interactables) {
+      this.scene.remove(this.interactables.group);
+      this.interactables.dispose();
+    }
+    this.interactables = new Interactables(
+      {
+        inkBurst: (p, s) => this.particles.inkBurst(p, s),
+        hitSpark: (p, s) => this.particles.hitSpark(p, s),
+        audioHit: () => this.audio.death(),
+        flash: (a) => this.post.punchFlash(a),
+      },
+      cfg.objective === "shatter" ? cfg.shrines : 0,
+      cfg.boundary,
+      (pos, remaining) => this.onShrineShattered(pos, remaining)
+    );
+    this.scene.add(this.interactables.group);
+
+    // the boss only appears once this world's objective is met
+    this.enemies.bossReady = () =>
+      cfg.objective === "shatter"
+        ? this.interactables.remaining === 0
+        : this.enemies.wave >= cfg.wavesBeforeBoss;
+    this.refreshObjective();
+
     this.scene.background = new THREE.Color(cfg.bg);
     this.scene.fog = new THREE.Fog(cfg.bg, cfg.fogNear, cfg.fogFar);
     this.player.boundary = cfg.boundary;
     this.enemies.wavesBeforeBoss = cfg.wavesBeforeBoss;
 
     if (!this.started) this.renderStill();
+  }
+
+  /** Update the objective line in the HUD for the current world state. */
+  private refreshObjective() {
+    if (this.gameOver) return this.hud.setObjective("");
+    if (this.currentLevel.objective === "shatter" && this.interactables) {
+      const t = this.interactables.total;
+      const done = t - this.interactables.remaining;
+      if (this.interactables.remaining > 0) {
+        this.hud.setObjective(`objective · shatter the ink shrines <b>[${done}/${t}]</b>`);
+      } else {
+        this.hud.setObjective(`objective · <b>the way is open</b> — face the warden`);
+      }
+    } else {
+      this.hud.setObjective("");
+    }
+  }
+
+  private onShrineShattered(pos: THREE.Vector3, remaining: number) {
+    // big ink payoff
+    for (let i = 0; i < 4; i++) this.pickups.spawn(pos, "ink", 3);
+    this.pickups.spawn(pos, "posture", 1);
+    this.hud.floatText(pos.clone().setY(4), `<span class="b">[shrine shattered]</span>`, true);
+    this.refreshObjective();
+    if (remaining === 0) {
+      this.hud.banner("the way is open", "the warden stirs");
+      this.hud.say("The shrines are silent now. Only the Warden remains.", "— the page thins.", 4);
+    }
   }
 
   /** Pick a level/location (from the world-select screen). */
@@ -481,6 +536,7 @@ export class Game {
   private startBoss() {
     this.boss = new Boss(this.ctx);
     this.hud.banner("THE WARDEN", "the prison wakes");
+    this.hud.setObjective("");
     this.post.punchFlash(0.6);
   }
 
@@ -603,6 +659,7 @@ export class Game {
     this.arena.update(dt, t);
     this.environment.update(dt, t);
     this.destructibles.update(dt);
+    this.interactables.update(dt, t);
     this.sharks.update(dt, t);
     this.voidSmoke.update(dt, t);
     this.particles.update(dt);

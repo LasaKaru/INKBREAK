@@ -41,4 +41,6 @@ export interface GameContext {
   getBoss: () => import("./Boss").Boss | null;
   /** live accessor for destructible cover in the arena */
   getDestructibles: () => import("./Destructibles").Destructibles;
+  /** live accessor for interactive objects (shrines) */
+  getInteractables: () => import("./Interactables").Interactables;
 }
