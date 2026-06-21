@@ -13,7 +13,7 @@ export class EnemyManager {
   private betweenTimer = 0;
   private spawning = false;
   private bossTriggered = false;
-  readonly wavesBeforeBoss = 3;
+  wavesBeforeBoss = 3;
 
   // narrative beats keyed to wave clears
   private quips = [

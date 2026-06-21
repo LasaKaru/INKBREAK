@@ -1,19 +1,20 @@
 import * as THREE from "three";
+import { LevelConfig } from "./Levels";
 
 /**
- * The surreal monochrome landscape surrounding the prison hall, glimpsed
- * through its broken arches: a vast ink lake, jagged mountain ridges fading
- * into the white horizon, and standing stones / monoliths rising from the
- * water. All low-poly + fog, so it stays cheap and reads as a sketch.
+ * The surreal monochrome landscape surrounding the hall, glimpsed through its
+ * broken arches: an ink lake, jagged mountain ridges fading into the white
+ * horizon, and standing stones rising from the water. Driven by a LevelConfig
+ * so each location looks distinct. Low-poly + fog, cheap, reads as a sketch.
  */
 export class Environment {
   group = new THREE.Group();
-  private water!: THREE.Mesh;
-  private waterMat!: THREE.ShaderMaterial;
+  private water?: THREE.Mesh;
+  private waterMat?: THREE.ShaderMaterial;
 
-  constructor() {
-    this.buildWater();
-    this.buildMountains();
+  constructor(private cfg: LevelConfig) {
+    if (cfg.water) this.buildWater();
+    if (cfg.mountains) this.buildMountains();
     this.buildMonoliths();
     this.buildShoreStones();
   }
@@ -115,13 +116,15 @@ export class Environment {
         this.group.add(peak);
       }
     };
-    make(120, 26, 30, 70, 0xcac7c0); // far range
-    make(80, 20, 18, 42, 0xa8a59e); // near range
+    const base = this.cfg.floorSize * 0.55;
+    make(base * 1.5, 26, 30, 70, 0xcac7c0); // far range
+    make(base, 20, 18, 42, 0xa8a59e); // near range
   }
 
   // ---------------- monoliths in the lake ----------------
   private buildMonoliths() {
-    const count = 14;
+    const count = this.cfg.monoliths;
+    if (count <= 0) return;
     const geo = new THREE.BoxGeometry(2.2, 12, 2.2);
     // chip the top so each reads like a broken standing stone
     const pos = geo.attributes.position as THREE.BufferAttribute;
@@ -142,7 +145,7 @@ export class Environment {
     const p = new THREE.Vector3();
     for (let i = 0; i < count; i++) {
       const a = Math.random() * Math.PI * 2;
-      const r = 42 + Math.random() * 38;
+      const r = this.cfg.boundary + 2 + Math.random() * (this.cfg.floorSize * 0.4);
       const scale = 0.6 + Math.random() * 1.4;
       p.set(Math.cos(a) * r, scale * 4 - 3, Math.sin(a) * r);
       q.setFromEuler(new THREE.Euler((Math.random() - 0.5) * 0.18, Math.random() * Math.PI, (Math.random() - 0.5) * 0.18));
@@ -156,7 +159,8 @@ export class Environment {
 
   // ---------------- scattered shore stones ----------------
   private buildShoreStones() {
-    const count = 40;
+    const count = this.cfg.shoreStones;
+    if (count <= 0) return;
     const geo = new THREE.DodecahedronGeometry(1, 0);
     const inst = new THREE.InstancedMesh(geo, this.mat(0xc2bfb8), count);
     inst.castShadow = true;
@@ -167,7 +171,7 @@ export class Environment {
     const p = new THREE.Vector3();
     for (let i = 0; i < count; i++) {
       const a = Math.random() * Math.PI * 2;
-      const r = 26 + Math.random() * 16; // just outside the hall
+      const r = this.cfg.boundary - 4 + Math.random() * 18; // around the hall edge
       const scale = 0.4 + Math.random() * 1.6;
       p.set(Math.cos(a) * r, scale * 0.4 - 1.2, Math.sin(a) * r);
       q.setFromEuler(new THREE.Euler(Math.random(), Math.random(), Math.random()));
@@ -180,6 +184,13 @@ export class Environment {
   }
 
   update(_dt: number, t: number) {
-    this.waterMat.uniforms.time.value = t;
+    if (this.waterMat) this.waterMat.uniforms.time.value = t;
+  }
+
+  dispose() {
+    this.group.traverse((o: THREE.Object3D) => {
+      const m = o as THREE.Mesh;
+      if (m.geometry) m.geometry.dispose();
+    });
   }
 }

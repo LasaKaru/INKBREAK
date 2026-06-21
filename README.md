@@ -40,6 +40,17 @@ npm run preview
 | Inventory | `Tab` (pauses; click to equip) |
 | Pause | `Esc` (releases the mouse) |
 
+## v0.8 — "Worlds"
+
+- **Level system** (`src/game/Levels.ts`): the Arena + Environment are now
+  data-driven, so locations differ in size, density, palette, fog and waves.
+- **Bigger ground** across the board, and four distinct worlds:
+  **The Sketch Prison**, **The Drowned Gallery** (flooded, monoliths),
+  **The White Wastes** (huge open plain ringed by mountains), and
+  **The Ink Void** (tight, fog-choked, boss-rush).
+- **World-select screen** from the title menu (`[ select world ]`) with live
+  preview; the choice persists.
+
 ## v0.7 — "Ink Flow"
 
 Melee depth:

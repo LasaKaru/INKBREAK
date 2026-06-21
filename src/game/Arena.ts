@@ -1,17 +1,18 @@
 import * as THREE from "three";
+import { LevelConfig } from "./Levels";
 
 /**
- * The grand, crumbling prison hall: tiled floor, instanced pillars, hanging
- * birdcages (some numbered with roman numerals, like the videos), chains,
- * and a central altar/void structure. Everything is monochrome and lit for
- * strong, high-contrast shadows.
+ * The grand, crumbling hall: tiled floor, instanced pillars, hanging birdcages,
+ * chains, and a central altar/void structure. Driven by a LevelConfig so each
+ * location varies in size, density and palette. Strictly monochrome.
  */
 export class Arena {
   group = new THREE.Group();
-  readonly radius = 26; // play boundary
+  readonly radius: number; // play boundary
   cages: { mesh: THREE.Object3D; baseY: number; phase: number }[] = [];
 
-  constructor() {
+  constructor(private cfg: LevelConfig) {
+    this.radius = cfg.boundary;
     this.buildFloor();
     this.buildPillars();
     this.buildCages();
@@ -29,7 +30,9 @@ export class Arena {
   }
 
   private buildFloor() {
-    const geo = new THREE.PlaneGeometry(80, 80, 40, 40);
+    const size = this.cfg.floorSize;
+    const segs = Math.round(size / 2);
+    const geo = new THREE.PlaneGeometry(size, size, segs, segs);
     geo.rotateX(-Math.PI / 2);
     // subtle warping so the tiles feel hand-drawn / uneven
     const pos = geo.attributes.position as THREE.BufferAttribute;
@@ -39,12 +42,13 @@ export class Arena {
       pos.setY(i, Math.sin(x * 0.4) * 0.03 + Math.cos(z * 0.5) * 0.03);
     }
     geo.computeVertexNormals();
-    const floor = new THREE.Mesh(geo, this.mat(0xe8e6df, 1));
+    const floor = new THREE.Mesh(geo, this.mat(this.cfg.floorColor, 1));
     floor.receiveShadow = true;
     this.group.add(floor);
 
     // grid of darker tile seams for the drawn parquet look
-    const grid = new THREE.GridHelper(80, 48, 0x4a4743, 0x8f8c86);
+    const divisions = Math.round(size / 1.7);
+    const grid = new THREE.GridHelper(size, divisions, 0x4a4743, 0x8f8c86);
     (grid.material as THREE.Material).opacity = 0.35;
     (grid.material as THREE.Material).transparent = true;
     grid.position.y = 0.01;
@@ -52,13 +56,13 @@ export class Arena {
   }
 
   private buildPillars() {
-    const count = 12;
+    const count = this.cfg.pillarCount;
+    const ringR = this.cfg.pillarRing;
     const geo = new THREE.CylinderGeometry(0.9, 1.1, 16, 8);
-    const inst = new THREE.InstancedMesh(geo, this.mat(0xd6d3cc), count);
+    const inst = new THREE.InstancedMesh(geo, this.mat(this.cfg.pillarColor), count);
     inst.castShadow = true;
     inst.receiveShadow = true;
     const m = new THREE.Matrix4();
-    const ringR = 16;
     for (let i = 0; i < count; i++) {
       const a = (i / count) * Math.PI * 2;
       const x = Math.cos(a) * ringR;
@@ -71,7 +75,7 @@ export class Arena {
 
     // capitals on top of pillars
     const capGeo = new THREE.BoxGeometry(2.6, 0.7, 2.6);
-    const capInst = new THREE.InstancedMesh(capGeo, this.mat(0xccc9c2), count);
+    const capInst = new THREE.InstancedMesh(capGeo, this.mat(this.cfg.pillarColor), count);
     capInst.castShadow = true;
     for (let i = 0; i < count; i++) {
       const a = (i / count) * Math.PI * 2;
@@ -112,10 +116,11 @@ export class Arena {
   }
 
   private buildCages() {
-    const count = 7;
+    const count = this.cfg.cageCount;
+    const spread = this.cfg.pillarRing * 0.7;
     for (let i = 0; i < count; i++) {
       const a = (i / count) * Math.PI * 2 + 0.3;
-      const r = 9 + (i % 3) * 2.5;
+      const r = spread * (0.6 + (i % 3) * 0.18);
       const cage = this.makeCage();
       const baseY = 7 + (i % 4) * 1.2;
       cage.position.set(Math.cos(a) * r, baseY, Math.sin(a) * r);
@@ -175,8 +180,8 @@ export class Arena {
   private buildWalls() {
     // A ruined outer colonnade with gaps — the hall is broken open so the ink
     // lake, the standing stones and the mountains beyond are all visible.
-    const stone = this.mat(0xd2cfc8);
-    const ringR = 23;
+    const stone = this.mat(this.cfg.wallColor);
+    const ringR = this.cfg.wallRing;
     const count = 16;
     for (let i = 0; i < count; i++) {
       // leave roughly a third of the segments missing / collapsed
@@ -234,5 +239,12 @@ export class Arena {
     // slowly rotate the halo
     const halo = this.centralStructure.getObjectByName("halo");
     if (halo) halo.rotation.z += dt * 0.2;
+  }
+
+  dispose() {
+    this.group.traverse((o: THREE.Object3D) => {
+      const m = o as THREE.Mesh;
+      if (m.geometry) m.geometry.dispose();
+    });
   }
 }

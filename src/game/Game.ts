@@ -12,6 +12,7 @@ import { Pickups } from "./Pickups";
 import { Boss } from "./Boss";
 import { Settings, SettingsState } from "./Settings";
 import { Shop } from "./Shop";
+import { LEVELS, LevelConfig, getLevel } from "./Levels";
 import { Balance } from "./balance";
 import { HUD } from "../ui/HUD";
 import { Audio } from "../audio/Audio";
@@ -36,8 +37,9 @@ export class Game {
   private post: Postprocessing;
   private settings!: Settings;
 
-  private arena: Arena;
-  private environment: Environment;
+  private arena!: Arena;
+  private environment!: Environment;
+  private currentLevel: LevelConfig = getLevel(localStorage.getItem("inkbreak.level") || "prison");
   private sharks: Sharks;
   private voidSmoke: VoidSmoke;
   private player: Player;
@@ -77,7 +79,7 @@ export class Game {
       55,
       window.innerWidth / window.innerHeight,
       0.1,
-      300
+      460
     );
     this.camera.position.set(0, 6, 20);
 
@@ -92,10 +94,6 @@ export class Game {
     this.post = new Postprocessing(this.renderer, this.scene, this.camera);
 
     // ---- world ----
-    this.environment = new Environment();
-    this.scene.add(this.environment.group);
-    this.arena = new Arena();
-    this.scene.add(this.arena.group);
     this.sharks = new Sharks(4);
     this.scene.add(this.sharks.group);
     this.voidSmoke = new VoidSmoke(new THREE.Vector3(0, 16, 0));
@@ -157,6 +155,9 @@ export class Game {
     // ---- settings (look / quality / volume) with live apply ----
     this.settings = new Settings((s) => this.applySettings(s));
     this.applySettings(this.settings.state);
+
+    // ---- build the selected world (arena + environment + atmosphere) ----
+    this.buildWorld(this.currentLevel);
 
     window.addEventListener("resize", () => this.onResize());
 
@@ -241,12 +242,50 @@ export class Game {
       this.settings.show();
     });
 
+    // ---- world select ----
+    this.buildLevelSelectUI();
+    document.getElementById("title-worlds-btn")!.addEventListener("click", () => {
+      document.getElementById("levelselect")!.classList.remove("hidden");
+    });
+    const titleLevel = document.getElementById("title-level");
+    if (titleLevel) titleLevel.textContent = this.currentLevel.name;
+
     // ---- inventory toggle (Tab) ----
     window.addEventListener("keydown", (e) => {
       if (e.key === "Tab") {
         e.preventDefault();
         if (this.started && !this.gameOver && !this.settings.isOpen) this.toggleInventory();
       }
+    });
+  }
+
+  /** Populate the world-select overlay with cards for each level. */
+  private buildLevelSelectUI() {
+    const panel = document.getElementById("levelselect")!;
+    const cards = LEVELS.map(
+      (l) => `
+      <button class="lvl-card ${l.id === this.currentLevel.id ? "active" : ""}" data-id="${l.id}">
+        <span class="lvl-name">${l.name}</span>
+        <span class="lvl-sub">${l.subtitle}</span>
+        <span class="lvl-blurb">${l.blurb}</span>
+      </button>`
+    ).join("");
+    panel.innerHTML = `
+      <div class="lvl-inner">
+        <h2>[ choose a world ]</h2>
+        <div class="lvl-grid">${cards}</div>
+        <button id="lvl-close">[ back ]</button>
+      </div>`;
+
+    panel.querySelectorAll<HTMLElement>(".lvl-card").forEach((el) => {
+      el.addEventListener("click", () => {
+        this.selectLevel(el.dataset.id!);
+        panel.querySelectorAll(".lvl-card").forEach((c) => c.classList.remove("active"));
+        el.classList.add("active");
+      });
+    });
+    document.getElementById("lvl-close")!.addEventListener("click", () => {
+      panel.classList.add("hidden");
     });
   }
 
@@ -282,6 +321,44 @@ export class Game {
       this.paused = false;
       this.input.requestLock();
     }
+  }
+
+  /** (Re)build the arena + environment + atmosphere for a level. */
+  private buildWorld(cfg: LevelConfig) {
+    this.currentLevel = cfg;
+    if (this.arena) {
+      this.scene.remove(this.arena.group);
+      this.arena.dispose();
+    }
+    if (this.environment) {
+      this.scene.remove(this.environment.group);
+      this.environment.dispose();
+    }
+    this.arena = new Arena(cfg);
+    this.scene.add(this.arena.group);
+    this.environment = new Environment(cfg);
+    this.scene.add(this.environment.group);
+
+    this.scene.background = new THREE.Color(cfg.bg);
+    this.scene.fog = new THREE.Fog(cfg.bg, cfg.fogNear, cfg.fogFar);
+    this.player.boundary = cfg.boundary;
+    this.enemies.wavesBeforeBoss = cfg.wavesBeforeBoss;
+
+    if (!this.started) this.renderStill();
+  }
+
+  /** Pick a level/location (from the world-select screen). */
+  private selectLevel(id: string) {
+    if (this.started) return;
+    const cfg = getLevel(id);
+    try {
+      localStorage.setItem("inkbreak.level", cfg.id);
+    } catch {
+      /* ignore */
+    }
+    this.buildWorld(cfg);
+    const label = document.getElementById("title-level");
+    if (label) label.textContent = cfg.name;
   }
 
   /** Cinematic intro: ink wipe + opening monologue, then the first wave. */

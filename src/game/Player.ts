@@ -54,6 +54,9 @@ export class Player {
   // loadout
   inventory = new Inventory();
 
+  // play-area radius (set per level)
+  boundary = 44;
+
   constructor(private ctx: GameContext) {
     this.fig = buildFigure("player");
     this.fig.root.position.copy(this.pos);
@@ -461,7 +464,7 @@ export class Player {
     this.pos.addScaledVector(this.vel, dt);
     this.pos.y = 0;
     // arena boundary
-    const maxR = 25;
+    const maxR = this.boundary;
     const r2 = Math.hypot(this.pos.x, this.pos.z);
     if (r2 > maxR) {
       this.pos.x *= maxR / r2;

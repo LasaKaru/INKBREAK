@@ -35,6 +35,99 @@ Legend — Effort: `S` ≤1 day · `M` a few days · `L` ~1–2 weeks · `XL` 3+
 - **v0.7 "Ink Flow"** — melee **combo system** with ramping damage, alternating
   swings, every-4th-hit **ink-wave finishers** (AoE + knockback + style reward),
   and a flow-meter HUD.
+- **v0.8 "Worlds"** — data-driven **level system**, **bigger ground**, four
+  distinct worlds (Prison / Drowned Gallery / White Wastes / Ink Void), and a
+  **world-select screen** (persisted).
+
+---
+
+## ★ Master backlog (build one by one)
+
+Status: ✅ done · 🔜 next up · ⬜ todo · ⚙️ needs backend. Effort S/M/L.
+
+### World & Environment
+- ✅ Bigger ground / larger play area
+- ✅ Multiple worlds + world-select screen
+- 🔜 Destructible cover & props (crates, walls that shatter into ink) — M
+- ⬜ Hazards (ink pits, collapsing floor, spike traps) — M
+- ⬜ Interactive objects (levers, breakable cages release pickups) — M
+- ⬜ Weather / atmosphere layers (rain streaks, ink-fog banks, wind) — M
+- ⬜ Day/night or "page-aging" lighting shifts — M
+- ⬜ Procedural arena variation (seeded layouts) — L
+
+### Worlds / Levels / Progression
+- ✅ Level/location select
+- 🔜 Campaign progression (beat a world → unlock the next) — M
+- ⬜ Per-level objectives (survive N, defend point, hunt target) — M
+- ⬜ Hub world / sketchbook map between levels — L
+- ⬜ Endless & time-attack modes with scoring — M
+- ⬜ Daily seeded run — M
+
+### Combat & Weapons
+- ✅ Dual-slot weapons + variety (pistol/revolver/SMG/shotgun, katana/greatsword/whip)
+- ✅ Block / parry / counter, dash, stamina/posture, hit-stop
+- ✅ Melee combo system + finishers
+- ⬜ Weapon mods/upgrades (fire-rate, lifesteal, ink-element) — M
+- ⬜ Charged & special attacks / abilities on cooldown — M
+- ⬜ Aim modes: free-aim vs lock-on toggle, manual reload — S–M
+- ⬜ Status effects (ink-blind, slow, bleed) — M
+
+### Enemies & AI
+- ✅ Ranged enemies (gunners), archetypes (brute/dasher/shielded), boss
+- 🔜 Pathfinding — navigate around props instead of pushing through — L
+- ⬜ More archetypes — exploder, flying, summoner — M
+- ⬜ Spawn director — adaptive difficulty from player performance — M
+- ⬜ Ragdoll / death physics — M
+
+### Player Systems
+- ✅ Inventory, currency & between-wave shop, +max health/posture upgrades
+- 🔜 Perks / skill tree (faster reload, lifesteal, more health) — M
+- ⬜ Loadout screen — pick primary/secondary/perks before a run — M
+- ⬜ Leveling & XP, account/profile unlocks — M
+- ⬜ Classes (Assault / Medic / Sniper) with unique abilities — L
+- ⬜ Sprint meter, crouch & slide, jump/vault — S–M
+
+### Multiplayer & Social ⚙️ (needs backend)
+- ⬜ Live chat (global/room, WebSocket) — M ⚙️
+- ⬜ In-game quick-comms / preset callouts — S–M ⚙️
+- ⬜ Co-op 2–4 players (authoritative server + netcode) — L ⚙️
+- ⬜ PvP modes (team deathmatch, last-man-standing) — L ⚙️
+- ⬜ Online leaderboards (currently none) — M ⚙️
+- ⬜ Friends / parties / lobbies, voice (WebRTC) — L ⚙️
+- ⬜ Accounts & cloud saves — M ⚙️
+
+### "More Realistic" / Visual Fidelity
+- ✅ Sketch/ink post FX, posterize, vignette, grain (live-tunable)
+- 🔜 Post-processing: bloom, SSAO, motion blur, color grading — M
+- ⬜ PBR materials (textures, normal/roughness maps) — M
+- ⬜ Skeletal animations — rigged glTF characters/enemies — L
+- ⬜ Better imported models (weapons/enemies/buildings) — L
+- ⬜ Ground blood/ink decals, richer particles — M
+- ⬜ Volumetric god-rays, reflections, lighting polish — M
+- ⬜ Screen FX — ink-on-screen when hurt, scope glint, heat haze — S
+
+### UI / UX
+- ✅ Settings menu (look/quality/volume), pause + menus, flow/boss HUD
+- 🔜 Minimap / radar — enemy blips, objectives, pickups — M
+- ⬜ FOV slider + mouse sensitivity in settings — S
+- ⬜ Key rebinding + gamepad support — M
+- ⬜ Objective markers & compass — S
+- ⬜ Damage numbers, hitmarker variety, kill cam — S–M
+- ⬜ Mobile / touch controls — L
+
+### Audio & Music
+- ✅ Procedural SFX + master volume
+- 🔜 Music — menu + dynamic combat tracks that escalate with waves — M
+- ⬜ Ambient soundscape (wind, distant noise) — S
+- ⬜ Spatial/3D positional audio — M
+- ⬜ Voice lines / announcer ("wave incoming", streaks) — S
+
+### Tech / Performance / Balancing
+- ✅ Central balance config, quality presets, object pooling (particles/projectiles)
+- 🔜 Physics engine (cannon-es/rapier) for collisions, ragdolls, debris — L
+- ⬜ Code-split the bundle, stats overlay, automated tests + CI — S–M
+- ⬜ Live deploy (GitHub Pages workflow exists; enable Pages) — S
+- ⬜ Telemetry for balancing — M
 
 ---
 
