@@ -16,7 +16,7 @@ import { Perks } from "./Perks";
 import { Destructibles } from "./Destructibles";
 import { Interactables } from "./Interactables";
 import { Hazards } from "./Hazards";
-import { LEVELS, LevelConfig, getLevel } from "./Levels";
+import { LEVELS, SELECTABLE_LEVELS, LevelConfig, getLevel, nextLevel } from "./Levels";
 import { Balance } from "./balance";
 import { HUD } from "../ui/HUD";
 import { Audio } from "../audio/Audio";
@@ -56,6 +56,11 @@ export class Game {
   private pickups!: Pickups;
   private boss: Boss | null = null;
   private bossDefeated = false;
+  private secretDoor: THREE.Group | null = null;
+  private secretDoorPos = new THREE.Vector3();
+  private nearSecret = false;
+  private secretReturnId: string | null = null;
+  private advancing = false;
   private shop!: Shop;
   private perks!: Perks;
   private perksOpen = false;
@@ -286,13 +291,16 @@ export class Game {
         if (this.started && !this.gameOver && !this.paused && !this.perksOpen) this.openPerks(false);
         else if (this.perksOpen && !this.perksReturnToPause) this.closePerks();
       }
+      if (e.key.toLowerCase() === "g") {
+        if (this.started && !this.gameOver && !this.paused && this.nearSecret) this.enterSecret();
+      }
     });
   }
 
   /** Populate the world-select overlay with cards for each level. */
   private buildLevelSelectUI() {
     const panel = document.getElementById("levelselect")!;
-    const cards = LEVELS.map((l) => {
+    const cards = SELECTABLE_LEVELS.map((l) => {
       const locked = !this.unlocked.has(l.id);
       return `
       <button class="lvl-card ${l.id === this.currentLevel.id ? "active" : ""} ${locked ? "locked" : ""}" data-id="${l.id}" ${locked ? "data-locked=1" : ""}>
@@ -438,6 +446,8 @@ export class Game {
     );
     this.scene.add(this.interactables.group);
 
+    this.buildSecretDoor(cfg);
+
     // the boss only appears once this world's objective is met
     this.enemies.bossReady = () =>
       cfg.objective === "shatter"
@@ -451,6 +461,125 @@ export class Game {
     this.enemies.wavesBeforeBoss = cfg.wavesBeforeBoss;
 
     if (!this.started) this.renderStill();
+  }
+
+  /** A hidden door, tucked near the rim, that warps to the secret Sanctum. */
+  private buildSecretDoor(cfg: LevelConfig) {
+    if (this.secretDoor) {
+      this.scene.remove(this.secretDoor);
+      this.secretDoor = null;
+    }
+    if (cfg.hidden) return; // no door inside the secret world itself
+
+    const g = new THREE.Group();
+    const stone = new THREE.MeshStandardMaterial({ color: 0x1a1714, roughness: 0.8, flatShading: true });
+    const left = new THREE.Mesh(new THREE.BoxGeometry(0.6, 4.2, 0.6), stone);
+    left.position.set(-1.1, 2.1, 0);
+    const right = new THREE.Mesh(new THREE.BoxGeometry(0.6, 4.2, 0.6), stone);
+    right.position.set(1.1, 2.1, 0);
+    const top = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.6, 0.6), stone);
+    top.position.set(0, 4.3, 0);
+    const slab = new THREE.Mesh(
+      new THREE.BoxGeometry(1.9, 3.9, 0.25),
+      new THREE.MeshStandardMaterial({ color: 0x0c0a09, roughness: 0.6 })
+    );
+    slab.position.set(0, 2.05, 0);
+    // glowing keyhole sigil
+    const key = new THREE.Mesh(
+      new THREE.TorusGeometry(0.35, 0.1, 8, 16),
+      new THREE.MeshStandardMaterial({ color: 0xf2f0ea, emissive: 0xffffff })
+    );
+    key.position.set(0, 2.4, 0.2);
+    key.name = "sigil";
+    g.add(left, right, top, slab, key);
+    g.traverse((o: THREE.Object3D) => ((o as THREE.Mesh).castShadow = true));
+
+    // tuck it against the wall at a fixed, discoverable-but-quiet angle
+    const a = 2.2;
+    const r = cfg.boundary - 1.5;
+    this.secretDoorPos.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+    g.position.copy(this.secretDoorPos);
+    g.lookAt(0, 2, 0);
+    this.scene.add(g);
+    this.secretDoor = g;
+  }
+
+  /** Warp into the hidden Sanctum, granting the legendary Voidedge blade. */
+  private enterSecret() {
+    if (!this.started || this.gameOver || this.advancing) return;
+    this.secretReturnId = this.currentLevel.id;
+    this.player.inventory.addWeapon("voidedge");
+    this.hud.banner("a secret door opens", "the Voidedge is yours");
+    this.hud.say("Behind the page, a blade was waiting.", "— Voidedge acquired.", 4);
+    this.advanceWorld(getLevel("sanctum"));
+  }
+
+  private unlockWorld(id: string) {
+    if (!this.unlocked.has(id)) {
+      this.unlocked.add(id);
+      this.saveUnlocked();
+      this.buildLevelSelectUI();
+    }
+  }
+
+  private resetBoss() {
+    if (this.boss) this.boss.dispose();
+    this.boss = null;
+    this.hud.hideBoss();
+  }
+
+  /** Transition into a world mid-run, keeping loadout / perks / ink. */
+  private advanceWorld(cfg: LevelConfig) {
+    this.advancing = true;
+    this.hud.setPrompt("");
+    this.inkWipe();
+    setTimeout(() => {
+      this.buildWorld(cfg);
+      this.enemies.reset();
+      this.resetBoss();
+      this.bossDefeated = false;
+      this.prisonIntegrity = 100;
+      this.hud.setPrisonIntegrity(100);
+      // place the figure near the edge, facing in
+      this.player.pos.set(0, 0, cfg.boundary * 0.45);
+      this.player.vel.set(0, 0, 0);
+      this.player.health = Math.min(this.player.maxHealth, this.player.health + 30);
+      this.hud.setPlayerHealth(this.player.health);
+      this.hud.banner(cfg.name, cfg.subtitle);
+      this.advancing = false;
+      setTimeout(() => this.enemies.start(), 700);
+    }, 520);
+  }
+
+  /** Called once when a world's Warden is defeated — advance the campaign. */
+  private onBossDefeated() {
+    this.bossDefeated = true;
+    this.hud.setPrisonIntegrity(0);
+
+    // clearing the secret sanctum returns you to the main campaign
+    if (this.currentLevel.hidden) {
+      const ret = this.secretReturnId ?? "prison";
+      this.secretReturnId = null;
+      const nxt = nextLevel(ret);
+      this.hud.banner("the sanctum yields", "the page turns");
+      if (nxt) {
+        this.unlockWorld(nxt.id);
+        setTimeout(() => this.advanceWorld(nxt), 2600);
+      } else {
+        setTimeout(() => this.win(), 2200);
+      }
+      return;
+    }
+
+    const nxt = nextLevel(this.currentLevel.id);
+    if (nxt) {
+      this.unlockWorld(nxt.id);
+      this.hud.banner(`${this.currentLevel.name} falls`, `next · ${nxt.name}`);
+      this.hud.say("The world breaks open. Another bleeds through.", "— onward.", 3);
+      setTimeout(() => this.advanceWorld(nxt), 2900);
+    } else {
+      this.win();
+    }
   }
 
   /** Update the objective line in the HUD for the current world state. */
@@ -585,25 +714,18 @@ export class Game {
     this.post.punchFlash(0.6);
   }
 
+  /** Final victory — the whole campaign is done. */
   private win() {
     this.gameOver = true;
     this.hud.hideBoss();
     this.hud.setPrisonIntegrity(0);
-    const next = this.unlockNext();
-    this.hud.banner("the prison breaks", "[0%]");
-    if (next) {
-      this.hud.say(
-        `${this.currentLevel.name} is broken. A new world bleeds through: ${next.name}.`,
-        "— reload to choose where the ink leads next.",
-        999
-      );
-    } else {
-      this.hud.say(
-        "The prison stood firm at a perfect [100%]... until it didn't.",
-        "— and the page tore open. every world, unmade.",
-        999
-      );
-    }
+    this.hud.setPrompt("");
+    this.hud.banner("every world unmade", "[0%]");
+    this.hud.say(
+      "The prison stood firm at a perfect [100%]... until it didn't. Every page, torn.",
+      "— the artist set down the pen. reload to begin again.",
+      999
+    );
     this.post.punchFlash(0.9);
     document.exitPointerLock?.();
   }
@@ -684,13 +806,24 @@ export class Game {
         if (this.boss.alive) {
           this.hud.setPrisonIntegrity(this.boss.healthFrac * 100);
         } else if (!this.bossDefeated) {
-          this.bossDefeated = true;
-          this.hud.say(
-            "The prison stood firm at a perfect [100%]... and then it broke.",
-            "— the warden was only ever me.",
-            999
+          this.onBossDefeated();
+        }
+      }
+
+      // ---- secret door proximity + sigil glow ----
+      if (this.secretDoor && !this.advancing) {
+        const d = this.player.pos.distanceTo(this.secretDoorPos);
+        const sigil = this.secretDoor.getObjectByName("sigil");
+        if (sigil) {
+          (sigil as THREE.Mesh).rotation.z += dt * 2;
+          ((sigil as THREE.Mesh).material as THREE.MeshStandardMaterial).emissive.setScalar(
+            0.4 + Math.sin(t * 4) * 0.3
           );
-          setTimeout(() => this.win(), 2000);
+        }
+        const near = d < 3.4;
+        if (near !== this.nearSecret) {
+          this.nearSecret = near;
+          this.hud.setPrompt(near ? "a secret door hums — press <b>[G]</b>" : "");
         }
       }
 

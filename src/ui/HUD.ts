@@ -20,6 +20,7 @@ export class HUD {
   private bossName: HTMLElement;
   private combo: HTMLElement;
   private objective: HTMLElement;
+  private prompt: HTMLElement;
   private narrativeTimer = 0;
 
   constructor(private camera: THREE.Camera) {
@@ -37,12 +38,19 @@ export class HUD {
     this.bossName = document.getElementById("boss-name")!;
     this.combo = document.getElementById("combo")!;
     this.objective = document.getElementById("objective")!;
+    this.prompt = document.getElementById("prompt")!;
   }
 
   /** Current objective line under the prison meter (empty string hides it). */
   setObjective(text: string) {
     this.objective.innerHTML = text;
     this.objective.classList.toggle("show", text.length > 0);
+  }
+
+  /** Contextual interaction prompt (e.g. near the secret door). */
+  setPrompt(text: string) {
+    this.prompt.innerHTML = text;
+    this.prompt.classList.toggle("show", text.length > 0);
   }
 
   /** Melee flow meter. count<2 hides it; finisher pulses it. */

@@ -40,6 +40,8 @@ export interface LevelConfig {
 
   // gameplay
   wavesBeforeBoss: number;
+  /** hidden worlds (e.g. the secret sanctum) don't appear in world-select */
+  hidden?: boolean;
 }
 
 export const LEVELS: LevelConfig[] = [
@@ -155,8 +157,47 @@ export const LEVELS: LevelConfig[] = [
     fogFar: 80,
     wavesBeforeBoss: 2,
   },
+  {
+    id: "sanctum",
+    name: "The Ink Sanctum",
+    subtitle: "a secret behind the page",
+    blurb: "A hidden vault of pure white. Few find it; fewer leave.",
+    floorSize: 110,
+    boundary: 34,
+    pillarRing: 20,
+    pillarCount: 14,
+    wallRing: 28,
+    cageCount: 12,
+    floorColor: 0xf2f1ec,
+    pillarColor: 0xe2dfd8,
+    wallColor: 0xdedbd4,
+    water: false,
+    mountains: false,
+    monoliths: 10,
+    shoreStones: 30,
+    crates: 8,
+    pits: 0,
+    spikes: 4,
+    objective: "survive",
+    shrines: 0,
+    bg: 0xfbfbf8,
+    fogNear: 40,
+    fogFar: 140,
+    wavesBeforeBoss: 2,
+    hidden: true,
+  },
 ];
+
+/** Worlds shown in the select screen (excludes hidden/secret worlds). */
+export const SELECTABLE_LEVELS = LEVELS.filter((l) => !l.hidden);
 
 export function getLevel(id: string): LevelConfig {
   return LEVELS.find((l) => l.id === id) ?? LEVELS[0];
+}
+
+/** The next non-hidden world after `id`, or null at the end of the campaign. */
+export function nextLevel(id: string): LevelConfig | null {
+  const list = SELECTABLE_LEVELS;
+  const i = list.findIndex((l) => l.id === id);
+  return i >= 0 && i + 1 < list.length ? list[i + 1] : null;
 }

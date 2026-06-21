@@ -52,6 +52,10 @@ Legend — Effort: `S` ≤1 day · `M` a few days · `L` ~1–2 weeks · `XL` 3+
 - **v0.13 "Ink Arts"** — a **perk screen** (pause menu / `P`): spend ink on
   stacking buffs (vigor, lifesteal, swiftness, melee/ranged power, dash cd,
   ink gain), wired into combat as multipliers. Per run.
+- **v0.14 "The Long Page"** — **continuous campaign** (beat a Warden -> advance
+  to the next world keeping loadout/perks/ink), a **secret door** to the hidden
+  **Ink Sanctum** (grants the legendary **Voidedge** blade), and powerful new
+  weapons (**Ink Cannon**, **Railpen**, **Voidedge**).
 
 ---
 

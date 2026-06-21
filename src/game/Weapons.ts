@@ -68,6 +68,28 @@ export const WEAPONS: Record<string, WeaponDef> = {
     meshScale: 1.2,
     blurb: "Up close, it blots everything out.",
   },
+  inkcannon: {
+    id: "inkcannon",
+    name: "Ink Cannon",
+    kind: "ranged",
+    damage: 95,
+    cooldown: 0.95,
+    vulnMult: 2.0,
+    range: 24,
+    meshScale: 1.5,
+    blurb: "A whole bottle, fired at once.",
+  },
+  railpen: {
+    id: "railpen",
+    name: "Railpen",
+    kind: "ranged",
+    damage: 135,
+    cooldown: 1.15,
+    vulnMult: 2.2,
+    range: 32,
+    meshScale: 1.35,
+    blurb: "Draws one perfect, fatal line across the page.",
+  },
 
   // ---- melee ----
   katana: {
@@ -102,6 +124,17 @@ export const WEAPONS: Record<string, WeaponDef> = {
     reach: 4.6,
     meshScale: 0.8,
     blurb: "Long, lashing, and loud.",
+  },
+  voidedge: {
+    id: "voidedge",
+    name: "Voidedge",
+    kind: "melee",
+    damage: 96,
+    cooldown: 0.5,
+    vulnMult: 1,
+    reach: 3.6,
+    meshScale: 1.3,
+    blurb: "The blade the prison fears. Cuts the page itself.",
   },
 };
 

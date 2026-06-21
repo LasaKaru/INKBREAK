@@ -363,6 +363,30 @@ body {
   }
 }
 
+/* Contextual interaction prompt */
+#prompt {
+  position: absolute;
+  bottom: 24%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 16px;
+  letter-spacing: 1px;
+  color: var(--ink);
+  background: rgba(244, 243, 239, 0.7);
+  padding: 6px 14px;
+  border: 1px solid var(--ink);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+#prompt.show {
+  opacity: 0.95;
+}
+
+#prompt b {
+  font-weight: bold;
+}
+
 /* Narrative monologue */
 #narrative {
   position: absolute;

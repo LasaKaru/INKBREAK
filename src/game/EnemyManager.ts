@@ -87,6 +87,16 @@ export class EnemyManager {
     this.nextWave();
   }
 
+  /** Wipe all enemies and reset wave state (used when advancing worlds). */
+  reset() {
+    for (const e of this.enemies) e.dispose();
+    this.enemies = [];
+    this.wave = 0;
+    this.betweenTimer = 0;
+    this.spawning = false;
+    this.bossTriggered = false;
+  }
+
   private nextWave() {
     this.wave++;
     this.spawning = true;

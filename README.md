@@ -40,6 +40,19 @@ npm run preview
 | Inventory | `Tab` (pauses; click to equip) |
 | Pause | `Esc` (releases the mouse) |
 
+## v0.14 — "The Long Page" (campaign + secrets)
+
+- **Continuous campaign**: defeat a world's Warden and you now **advance straight
+  into the next world** — keeping your weapons, perks, ink and upgrades — with an
+  ink-wipe transition and a breather heal, all the way to a final victory.
+- **Secret door**: a hidden, glowing door tucked against the rim of every world.
+  Find it, press **`G`**, and warp into the secret world **The Ink Sanctum** —
+  which grants the **legendary Voidedge blade** on entry. Clear it to rejoin the
+  campaign.
+- **Powerful new weapons**: **Ink Cannon** & **Railpen** (ranged) and the
+  **Voidedge** (legendary blade) — all available from weapon crates / the shop's
+  random unlock (Voidedge guaranteed from the secret).
+
 ## v0.13 — "Ink Arts" (perks)
 
 - **Perk screen** (`src/game/Perks.ts`) reachable from the pause menu
