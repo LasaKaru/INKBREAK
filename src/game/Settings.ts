@@ -17,6 +17,7 @@ export interface SettingsState {
 }
 
 export const PRESETS: Record<string, Partial<SettingsState>> = {
+  cartoon: { contrast: 1.7, brightness: 1.34, edge: 2.4, levels: 3, hatching: 0, grain: 0, vignette: 0.05 },
   clean: { contrast: 1.6, brightness: 1.15, edge: 1.6, levels: 4, hatching: 0.1, grain: 0.02, vignette: 0.14 },
   manga: { contrast: 2.0, brightness: 1.22, edge: 2.1, levels: 3, hatching: 0.18, grain: 0.0, vignette: 0.1 },
   sketch: { contrast: 1.3, brightness: 1.05, edge: 1.3, levels: 5, hatching: 0.45, grain: 0.12, vignette: 0.32 },
@@ -24,13 +25,13 @@ export const PRESETS: Record<string, Partial<SettingsState>> = {
 };
 
 const DEFAULTS: SettingsState = {
-  preset: "clean",
-  ...PRESETS.clean,
+  preset: "cartoon",
+  ...PRESETS.cartoon,
   quality: "high",
   volume: 0.6,
 } as SettingsState;
 
-const STORAGE_KEY = "inkbreak.settings.v1";
+const STORAGE_KEY = "inkbreak.settings.v2"; // bumped: default look is now "cartoon"
 
 interface SliderDef {
   key: keyof SettingsState;

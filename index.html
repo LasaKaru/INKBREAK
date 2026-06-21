@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>INKBREAK</title>
+    <title>INKBREAK — HelaO2 Studio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -15,6 +15,15 @@
   <body>
     <div id="app">
       <canvas id="scene"></canvas>
+
+      <!-- Studio splash (auto-fades, pure CSS) -->
+      <div id="studiosplash">
+        <div class="studio-inner">
+          <div class="studio-mark">H<span>O</span>2</div>
+          <div class="studio-name">HelaO2 Studio</div>
+          <div class="studio-tag">presents</div>
+        </div>
+      </div>
 
       <!-- HUD overlay (HTML/CSS for crisp text + perf) -->
       <div id="hud">
@@ -64,7 +73,7 @@
         <div id="loadout"></div>
 
         <!-- Bottom-left signature, matching the videos' watermark vibe -->
-        <div id="signature">INKBREAK — a sketch in motion</div>
+        <div id="signature">INKBREAK · HelaO2 Studio</div>
 
         <!-- Controls hint -->
         <div id="controls-hint">
@@ -80,6 +89,7 @@
         <div class="title-inner">
           <h1>INKBREAK</h1>
           <p class="subtitle">a sketch in motion</p>
+          <p class="studio">a <b>HelaO2 Studio</b> game</p>
           <p class="flavor">
             A faceless figure. A prison drawn in ink.<br />
             Break it before it redraws you.

@@ -48,6 +48,10 @@ export class Player {
   private comboTimer = 0;
   private comboSwing = 1; // alternating swing direction
 
+  // blade-dash (warrior blade-flight): slices enemies you pass through
+  private bladeDash = 0;
+  private bladeHits = new Set<Enemy>();
+
   // targeting (enemies or the boss core)
   lockedTarget: Targetable | null = null;
 
@@ -342,11 +346,42 @@ export class Player {
     this.dashCooldown = P.dashCooldown;
     this.invuln = P.dashInvuln;
     this.ctx.audio.dash();
+    this.ctx.audio.slash();
     const dir = this.moveDir.lengthSq() > 0 ? this.moveDir.clone() : this.forward();
     this.vel.addScaledVector(dir.normalize(), P.dashImpulse);
-    // ink trail
+    // face the dash direction so the blade leads
+    this.fig.root.rotation.y = Math.atan2(dir.x, dir.z);
+    // begin a blade-flight: slice anything we pass through
+    this.bladeDash = 0.3;
+    this.bladeHits.clear();
+    this.fig.sword.visible = true;
+    this.fig.pistol.visible = false;
     for (let i = 0; i < 14; i++) this.ctx.particles.emberRise(this.chest());
-    this.ctx.hud.floatText(this.chest(), `[dash]`);
+    this.ctx.hud.floatText(this.chest(), `[<span class="b">blade flight</span>]`);
+  }
+
+  /** While dashing with a blade, cut every enemy we sweep through (once each). */
+  private updateBladeDash(dt: number) {
+    if (this.bladeDash <= 0) return;
+    this.bladeDash -= dt;
+    const reach = 2.6;
+    const w = this.inventory.meleeWeapon;
+    for (const e of this.ctx.getEnemies()) {
+      if (!e.alive || this.bladeHits.has(e)) continue;
+      if (e.pos.distanceTo(this.pos) < reach) {
+        this.bladeHits.add(e);
+        if (e.state === "vulnerable") {
+          e.takeDamage(999, this.pos);
+          this.ctx.hud.floatText(e.center(), `[<span class="b">execution</span>]`, true);
+        } else {
+          e.takeDamage(w.damage * 1.3, this.pos);
+          this.ctx.particles.hitSpark(e.center(), 1.3);
+        }
+      }
+    }
+    // shear cover on the way through
+    this.ctx.getDestructibles().damageArea(this.pos, reach, 30);
+    this.ctx.particles.emberRise(this.chest());
   }
 
   // ---------------- helpers ----------------
@@ -453,7 +488,8 @@ export class Player {
     this.invuln = Math.max(0, this.invuln - dt);
     this.attackAnim = Math.max(0, this.attackAnim - dt);
     this.shootAnim = Math.max(0, this.shootAnim - dt);
-    if (this.attackAnim <= 0 && this.fig.sword.visible) {
+    this.updateBladeDash(dt);
+    if (this.attackAnim <= 0 && this.bladeDash <= 0 && this.fig.sword.visible) {
       this.fig.sword.visible = false;
       this.fig.pistol.visible = true;
     }

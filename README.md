@@ -1,4 +1,4 @@
-# INKBREAK
+# INKBREAK — a HelaO2 Studio game
 
 A stylish, surreal, **monochromatic action prototype** set inside a shifting,
 hand-drawn prison that feels like a living sketchbook. You play a faceless
@@ -39,6 +39,19 @@ npm run preview
 | Consumables | `1` heal vial · `2` posture tonic |
 | Inventory | `Tab` (pauses; click to equip) |
 | Pause | `Esc` (releases the mouse) |
+
+## v0.11 — "Cartoon Cut" (HelaO2 Studio)
+
+- **Cartoon look by default**: a new **`cartoon`** render preset (bright,
+  3-tone cel banding, bold solid ink outlines, no grain/hatch/vignette) replaces
+  the muddy default — pure-white surfaces, crisp black lines, high contrast.
+  Brighter ambient light to match. (Old saved settings are reset so the new look
+  shows; switch presets any time in **Settings**.)
+- **HelaO2 Studio branding**: animated **studio splash** on load, a title-screen
+  credit, and the in-game watermark.
+- **Blade-flight dash** (warrior feel): `Shift` is now a **blade-dash** — you
+  lunge in your move direction and **slice every enemy you sweep through**
+  (executing the staggered), shearing cover too, with dash i-frames.
 
 ## v0.10 — "Hazards"
 

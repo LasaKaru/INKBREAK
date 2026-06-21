@@ -26,8 +26,8 @@ export const SketchShader = {
     contrast: { value: 1.5 },
     brightness: { value: 1.12 },
     levels: { value: 4.0 },
-    inkColor: { value: [0.05, 0.05, 0.05] as [number, number, number] },
-    paperColor: { value: [0.97, 0.97, 0.96] as [number, number, number] },
+    inkColor: { value: [0.03, 0.03, 0.03] as [number, number, number] },
+    paperColor: { value: [0.99, 0.99, 0.985] as [number, number, number] },
     flash: { value: 0.0 }, // white impact flash, briefly raised on hits
   },
 
@@ -104,7 +104,8 @@ export const SketchShader = {
       float gy =  tl + 2.0 * t + tr - bl - 2.0 * b - br;
       float edge = sqrt(gx * gx + gy * gy);
       edge = clamp(edge * edgeStrength * 1.6, 0.0, 1.0);
-      edge = smoothstep(0.25, 0.6, edge);
+      // crisp, solid cartoon ink lines
+      edge = smoothstep(0.2, 0.42, edge);
 
       // --- tonal mapping: brightness, contrast, posterize ---
       float L = luma(base) * brightness;

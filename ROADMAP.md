@@ -43,6 +43,9 @@ Legend — Effort: `S` ≤1 day · `M` a few days · `L` ~1–2 weeks · `XL` 3+
   unlock the next; locked worlds in the select screen; persists).
 - **v0.10 "Hazards"** — **ink pits** (slow + damage-over-time to player *and*
   enemies) and telegraphed **spike traps** (burst damage), per-level.
+- **v0.11 "Cartoon Cut"** — bright **cartoon/cel** default look (3-tone bands +
+  bold ink outlines, no grain/vignette), **HelaO2 Studio** branding (splash +
+  credits), and a **blade-flight dash** that slices enemies you sweep through.
 
 ---
 

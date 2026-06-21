@@ -173,8 +173,8 @@ export class Game {
   }
 
   private setupLights() {
-    // bright ambient so surfaces read as white paper; the shader handles contrast
-    const ambient = new THREE.AmbientLight(0xffffff, 0.95);
+    // bright, even ambient for a clean cartoon read; the shader adds contrast + ink lines
+    const ambient = new THREE.AmbientLight(0xffffff, 1.1);
     this.scene.add(ambient);
 
     // strong key light for the dramatic, high-contrast shadows / god-ray feel
