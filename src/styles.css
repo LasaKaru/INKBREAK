@@ -256,6 +256,51 @@ body {
   transform-origin: 50px 50px;
 }
 
+/* Combo / flow meter */
+#combo {
+  position: absolute;
+  top: 50%;
+  right: 16%;
+  transform: translateY(-50%);
+  text-align: right;
+  font-family: "Shadows Into Light", cursive;
+  color: var(--ink);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+#combo.show {
+  opacity: 0.92;
+  animation: comboPop 0.18s ease;
+}
+
+#combo b {
+  font-size: 44px;
+  letter-spacing: 1px;
+}
+
+#combo span {
+  display: block;
+  font-family: "Special Elite", monospace;
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: var(--gray);
+  margin-top: -6px;
+}
+
+#combo.finisher b {
+  font-size: 56px;
+}
+
+@keyframes comboPop {
+  0% {
+    transform: translateY(-50%) scale(1.3);
+  }
+  100% {
+    transform: translateY(-50%) scale(1);
+  }
+}
+
 /* Floating combat text */
 #floaters {
   position: absolute;

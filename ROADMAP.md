@@ -32,6 +32,9 @@ Legend — Effort: `S` ≤1 day · `M` a few days · `L` ~1–2 weeks · `XL` 3+
   alongside grunt / gunner) with escalating wave composition, and a
   **between-wave ink shop** (consumables, random new weapon, +max health/posture
   upgrades) spending the ink-drop currency.
+- **v0.7 "Ink Flow"** — melee **combo system** with ramping damage, alternating
+  swings, every-4th-hit **ink-wave finishers** (AoE + knockback + style reward),
+  and a flow-meter HUD.
 
 ---
 

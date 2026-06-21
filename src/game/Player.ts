@@ -43,6 +43,11 @@ export class Player {
   private shootAnim = 0;
   private time = 0;
 
+  // melee combo / flow
+  private combo = 0;
+  private comboTimer = 0;
+  private comboSwing = 1; // alternating swing direction
+
   // targeting (enemies or the boss core)
   lockedTarget: Targetable | null = null;
 
@@ -206,29 +211,40 @@ export class Player {
     if (this.slashCooldown > 0) return;
     const w = this.inventory.meleeWeapon;
     this.slashCooldown = w.cooldown;
-    this.attackAnim = w.cooldown > 0.7 ? 0.5 : 0.35; // heavier weapons swing longer
+
+    // --- combo / flow ---
+    this.combo = this.comboTimer > 0 ? this.combo + 1 : 1;
+    this.comboTimer = 1.1; // window to keep the chain alive
+    const finisher = this.combo % 4 === 0; // every 4th strike is a finisher
+    const rampMult = 1 + Math.min(this.combo - 1, 3) * 0.13; // damage ramps with flow
+    this.comboSwing = -this.comboSwing || 1; // alternate swing direction
+    this.attackAnim = finisher ? 0.55 : w.cooldown > 0.7 ? 0.5 : 0.32;
+    this.ctx.hud.setCombo(this.combo, finisher);
     this.ctx.audio.slash();
+
     // swap to sword pose briefly
     this.fig.sword.visible = true;
     this.fig.pistol.visible = false;
 
-    const reach = w.reach ?? 3;
+    // finishers sweep a wider arc and hit everything around the player
+    const reach = (w.reach ?? 3) * (finisher ? 1.7 : 1);
+    const frontDot = finisher ? -0.6 : 0.2;
+    const dmg = w.damage * rampMult * (finisher ? 1.7 : 1);
+
     let hitAny = false;
     for (const e of this.ctx.getEnemies()) {
       if (!e.alive) continue;
       const d = e.pos.distanceTo(this.pos);
       if (d < reach) {
-        // must be roughly in front
         const toE = e.pos.clone().sub(this.pos).setY(0).normalize();
-        if (toE.dot(this.forward()) > 0.2) {
+        if (toE.dot(this.forward()) > frontDot) {
           hitAny = true;
           if (e.state === "vulnerable") {
-            // execution
             e.takeDamage(999, this.pos);
             this.ctx.hud.floatText(e.center(), `[<span class="b">execution</span>]`, true);
           } else {
-            e.takeDamage(w.damage, this.pos);
-            this.ctx.particles.hitSpark(e.center(), 1);
+            e.takeDamage(dmg, this.pos);
+            this.ctx.particles.hitSpark(e.center(), finisher ? 1.6 : 1);
           }
         }
       }
@@ -238,12 +254,20 @@ export class Player {
     if (boss && boss.alive && boss.center().y < 5.5) {
       const d = Math.hypot(boss.pos.x - this.pos.x, boss.pos.z - this.pos.z);
       if (d < reach + 2) {
-        boss.takeDamage(w.damage, this.pos);
+        boss.takeDamage(dmg, this.pos);
         this.ctx.particles.hitSpark(boss.center(), 1.3);
         hitAny = true;
       }
     }
-    if (!hitAny) {
+
+    if (finisher && hitAny) {
+      // ink-wave payoff: knockback, screen punch, style reward
+      this.ctx.particles.inkBurst(this.chest(), 1.4);
+      this.ctx.post.punchFlash(0.4);
+      this.ctx.hitStop(Balance.feel.hitStopHeavy);
+      this.inventory.addInk(2);
+      this.ctx.hud.floatText(this.chest(), `[<span class="b">ink-wave</span>] x${this.combo}`, true);
+    } else if (!hitAny) {
       this.ctx.hud.floatText(this.chest(), `[swing] — missed`);
     }
   }
@@ -423,6 +447,15 @@ export class Player {
       this.fig.pistol.visible = true;
     }
 
+    // combo flow decays if the chain isn't continued
+    if (this.comboTimer > 0) {
+      this.comboTimer -= dt;
+      if (this.comboTimer <= 0 && this.combo > 0) {
+        this.combo = 0;
+        this.ctx.hud.setCombo(0, false);
+      }
+    }
+
     // ---- integrate ----
     this.vel.multiplyScalar(1 - 9 * dt);
     this.pos.addScaledVector(this.vel, dt);
@@ -483,11 +516,12 @@ export class Player {
     if (this.shootAnim > 0) {
       this.fig.armR.rotation.x = THREE.MathUtils.lerp(this.fig.armR.rotation.x, -1.45, 1 - Math.exp(-dt * 30));
     }
-    // slashing: big overhead swing
+    // slashing: alternating swings driven by the combo step
     if (this.attackAnim > 0) {
-      const k = 1 - this.attackAnim / 0.35;
+      const k = 1 - this.attackAnim / 0.55;
       this.fig.armR.rotation.x = THREE.MathUtils.lerp(-2.6, 0.8, k);
-      this.fig.root.rotation.z = Math.sin(k * Math.PI) * 0.15;
+      // swing the torso the opposite way each hit for a back-and-forth feel
+      this.fig.root.rotation.z = Math.sin(k * Math.PI) * 0.22 * this.comboSwing;
     } else {
       this.fig.root.rotation.z = THREE.MathUtils.lerp(this.fig.root.rotation.z, 0, 1 - Math.exp(-dt * 10));
     }

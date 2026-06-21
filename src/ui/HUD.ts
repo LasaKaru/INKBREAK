@@ -18,6 +18,7 @@ export class HUD {
   private bossBar: HTMLElement;
   private bossFill: HTMLElement;
   private bossName: HTMLElement;
+  private combo: HTMLElement;
   private narrativeTimer = 0;
 
   constructor(private camera: THREE.Camera) {
@@ -33,6 +34,22 @@ export class HUD {
     this.bossBar = document.getElementById("boss-bar")!;
     this.bossFill = document.getElementById("boss-fill")!;
     this.bossName = document.getElementById("boss-name")!;
+    this.combo = document.getElementById("combo")!;
+  }
+
+  /** Melee flow meter. count<2 hides it; finisher pulses it. */
+  setCombo(count: number, finisher: boolean) {
+    if (count < 2) {
+      this.combo.classList.remove("show");
+      return;
+    }
+    this.combo.innerHTML = `<b>x${count}</b> <span>flow</span>`;
+    this.combo.classList.add("show");
+    this.combo.classList.toggle("finisher", finisher);
+    // retrigger the pop animation
+    this.combo.style.animation = "none";
+    void this.combo.offsetWidth;
+    this.combo.style.animation = "";
   }
 
   showBoss(name: string) {

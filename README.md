@@ -40,6 +40,19 @@ npm run preview
 | Inventory | `Tab` (pauses; click to equip) |
 | Pause | `Esc` (releases the mouse) |
 
+## v0.7 — "Ink Flow"
+
+Melee depth:
+
+- **Combo system** (`src/game/Player.ts`): chain melee hits within a short
+  window to build **flow** — damage ramps with the chain and swings alternate
+  direction for a back-and-forth feel.
+- **Finishers**: every 4th hit is an **ink-wave** — a wide sweeping AoE that hits
+  everything around you, with knockback, a screen punch, hit-stop, and a small
+  ink-drop style reward.
+- **Flow meter HUD** (`x3 flow`) that pulses on finishers and decays if you stop
+  attacking.
+
 ## v0.6 — "Spend & Slay"
 
 Combat variety and a purpose for all those ink drops:
