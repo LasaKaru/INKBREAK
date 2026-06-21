@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { Enemy } from "./Enemy";
+import { Enemy, ArchetypeId } from "./Enemy";
 import { GameContext } from "./types";
 
 /**
@@ -38,23 +38,45 @@ export class EnemyManager {
   constructor(
     private ctx: GameContext,
     private playerPos: () => THREE.Vector3,
-    private onBossTime: () => void
+    private onBossTime: () => void,
+    private onIntermission: () => void
   ) {}
 
   /** Spawn one figure at a ring position (used by waves and boss summons). */
-  private spawnOne(hasGun: boolean) {
+  private spawnOne(archetype: ArchetypeId) {
     const a = Math.random() * Math.PI * 2;
     const r = 14 + Math.random() * 6;
     const p = new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r);
-    const e = new Enemy(this.ctx, p, hasGun);
+    const e = new Enemy(this.ctx, p, archetype);
     this.ctx.particles.inkBurst(e.center(), 0.7);
     this.enemies.push(e);
+  }
+
+  /** Weighted archetype pick that gets nastier in later waves. */
+  private rollArchetype(): ArchetypeId {
+    const w = this.wave;
+    const pool: ArchetypeId[] = ["grunt", "grunt"];
+    if (w > 1) pool.push("gunner");
+    if (w >= 2) pool.push("dasher");
+    if (w >= 2) pool.push("brute");
+    if (w >= 3) pool.push("shielded", "dasher");
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 
   /** Boss reinforcements — drop figures in immediately. */
   summon(n: number) {
     for (let i = 0; i < n; i++) {
-      setTimeout(() => this.spawnOne(Math.random() < 0.4), i * 250);
+      setTimeout(() => this.spawnOne(this.rollArchetype()), i * 250);
+    }
+  }
+
+  /** Resume after the shop intermission — next wave, or the boss. */
+  proceed() {
+    if (this.wave >= this.wavesBeforeBoss) {
+      this.bossTriggered = true;
+      this.onBossTime();
+    } else {
+      this.nextWave();
     }
   }
 
@@ -78,7 +100,7 @@ export class EnemyManager {
         this.spawning = false;
         return;
       }
-      this.spawnOne(Math.random() < 0.35 && this.wave > 1);
+      this.spawnOne(this.rollArchetype());
       spawned++;
       setTimeout(doSpawn, 350);
     };
@@ -107,12 +129,8 @@ export class EnemyManager {
     if (this.betweenTimer > 0) {
       this.betweenTimer -= dt;
       if (this.betweenTimer <= 0) {
-        if (this.wave >= this.wavesBeforeBoss) {
-          this.bossTriggered = true;
-          this.onBossTime();
-        } else {
-          this.nextWave();
-        }
+        // open the shop; Game calls proceed() when the player continues
+        this.onIntermission();
       }
     }
   }

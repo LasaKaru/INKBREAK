@@ -11,6 +11,7 @@ import { Projectiles } from "./Projectiles";
 import { Pickups } from "./Pickups";
 import { Boss } from "./Boss";
 import { Settings, SettingsState } from "./Settings";
+import { Shop } from "./Shop";
 import { Balance } from "./balance";
 import { HUD } from "../ui/HUD";
 import { Audio } from "../audio/Audio";
@@ -45,6 +46,7 @@ export class Game {
   private pickups!: Pickups;
   private boss: Boss | null = null;
   private bossDefeated = false;
+  private shop!: Shop;
   private ctx: GameContext;
 
   private prisonIntegrity = 100;
@@ -122,7 +124,12 @@ export class Game {
     this.projectiles = new Projectiles(Balance.enemy.projectileSpeed);
     this.scene.add(this.projectiles.group);
     this.player = new Player(this.ctx);
-    this.enemies = new EnemyManager(this.ctx, () => this.player.pos, () => this.startBoss());
+    this.enemies = new EnemyManager(
+      this.ctx,
+      () => this.player.pos,
+      () => this.startBoss(),
+      () => this.openShop()
+    );
 
     // pickups feed straight into the player's inventory + the HUD
     this.pickups = new Pickups({
@@ -132,6 +139,20 @@ export class Game {
       float: (pos, text, big) => this.hud.floatText(pos, text, big),
     });
     this.scene.add(this.pickups.group);
+
+    // between-wave ink shop
+    this.shop = new Shop(
+      {
+        getInk: () => this.player.inventory.inkDrops,
+        spend: (n) => this.player.spendInk(n),
+        addConsumable: (t, n) => this.player.inventory.addConsumable(t, n),
+        unlockWeapon: () => this.player.unlockRandomWeapon(),
+        upgradeHealth: () => this.player.upgradeMaxHealth(),
+        upgradeStamina: () => this.player.upgradeMaxStamina(),
+        toast: (msg) => this.hud.banner(msg),
+      },
+      () => this.closeShop()
+    );
 
     // ---- settings (look / quality / volume) with live apply ----
     this.settings = new Settings((s) => this.applySettings(s));
@@ -196,8 +217,8 @@ export class Game {
     // ---- pause handling: losing pointer lock mid-combat pauses ----
     document.addEventListener("pointerlockchange", () => {
       if (!this.started || this.gameOver) return;
-      // the inventory + settings screens manage their own pause state
-      if (this.inventoryOpen || this.settings.isOpen) return;
+      // the inventory / settings / shop screens manage their own pause state
+      if (this.inventoryOpen || this.settings.isOpen || this.shop.isOpen) return;
       if (!this.input.pointerLocked) {
         this.paused = true;
         pausecard.classList.remove("hidden");
@@ -304,6 +325,21 @@ export class Game {
     if (this.boss) return; // boss owns the integrity readout during the fight
     this.prisonIntegrity = Math.max(8, this.prisonIntegrity - amount);
     this.hud.setPrisonIntegrity(this.prisonIntegrity);
+  }
+
+  /** Open the between-wave shop (pauses, releases the mouse). */
+  private openShop() {
+    this.paused = true;
+    document.exitPointerLock?.();
+    this.shop.show();
+  }
+
+  /** Continue from the shop into the next wave (or the boss). */
+  private closeShop() {
+    this.shop.hide();
+    this.paused = false;
+    this.input.requestLock();
+    this.enemies.proceed();
   }
 
   /** The prison wakes: spawn the Warden boss. */

@@ -617,6 +617,120 @@ body {
   gap: 12px;
 }
 
+/* ---------------- Between-wave shop ---------------- */
+#shop {
+  position: absolute;
+  inset: 0;
+  z-index: 29;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(
+    circle at 50% 42%,
+    rgba(244, 243, 239, 0.55),
+    rgba(244, 243, 239, 0.96) 72%
+  );
+  transition: opacity 0.25s ease;
+}
+
+#shop.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.shop-inner {
+  width: min(560px, 92vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  text-align: center;
+}
+
+.shop-inner h2 {
+  font-size: 38px;
+  letter-spacing: 8px;
+  font-weight: 400;
+}
+
+.shop-currency {
+  font-size: 15px;
+  letter-spacing: 2px;
+  color: var(--gray);
+  margin-bottom: 18px;
+}
+
+.shop-currency b {
+  color: var(--ink);
+}
+
+.shop-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "name cost" "desc cost";
+  gap: 2px 12px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid var(--gray);
+  color: var(--ink);
+  font-family: "Special Elite", monospace;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+.shop-item:hover {
+  border-color: var(--ink);
+  transform: translateX(3px);
+}
+
+.shop-item.broke {
+  opacity: 0.45;
+}
+
+.shop-name {
+  grid-area: name;
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+
+.shop-desc {
+  grid-area: desc;
+  font-size: 12px;
+  color: var(--gray);
+}
+
+.shop-cost {
+  grid-area: cost;
+  align-self: center;
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.shop-hint {
+  font-family: "Shadows Into Light", cursive;
+  font-size: 17px;
+  color: var(--gray);
+  margin: 14px 0 18px;
+}
+
+#shop-continue {
+  background: transparent;
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  font-family: "Special Elite", monospace;
+  font-size: 18px;
+  letter-spacing: 3px;
+  padding: 10px 30px;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+#shop-continue:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
 /* ---------------- Settings panel ---------------- */
 #settings {
   position: absolute;

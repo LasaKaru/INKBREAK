@@ -4,17 +4,19 @@ import { GameContext } from "./types";
 import { Balance } from "./balance";
 
 export type EnemyState = "approach" | "windup" | "strike" | "vulnerable" | "dead";
+export type ArchetypeId = keyof typeof Balance.archetypes;
 
 /**
  * A minimalist white enemy figure with a small combat state machine:
  *   approach -> windup (telegraph) -> strike -> (recover) -> approach
  * Getting countered or shot mid-windup drops it into a `vulnerable` stun,
- * the opening for an execution.
+ * the opening for an execution. Archetypes (grunt/gunner/brute/dasher/shielded)
+ * layer stat multipliers + behaviour flags over the base numbers.
  */
 export class Enemy {
   fig: Figure;
   state: EnemyState = "approach";
-  health: number = Balance.enemy.health;
+  health: number;
   alive = true;
   pos = new THREE.Vector3();
   private vel = new THREE.Vector3();
@@ -23,18 +25,44 @@ export class Enemy {
   private deathTime = 0;
   private hitFlash = 0;
   private fireCooldown = Math.random() * Balance.enemy.rangedCooldown;
+  private lungeCooldown = 1 + Math.random();
   walkPhase = Math.random() * Math.PI * 2;
 
-  // tuning (from central balance config)
-  readonly attackRange = Balance.enemy.attackRange;
-  readonly windupTime = Balance.enemy.windupTime;
-  readonly speed = Balance.enemy.speed;
+  readonly archetype: ArchetypeId;
+  private a: (typeof Balance.archetypes)[ArchetypeId];
 
-  constructor(private ctx: GameContext, spawn: THREE.Vector3, hasGun = false) {
+  // tuning (base values scaled by archetype)
+  readonly attackRange = Balance.enemy.attackRange;
+  readonly windupTime: number;
+  readonly speed: number;
+  private damageMult: number;
+
+  constructor(private ctx: GameContext, spawn: THREE.Vector3, archetype: ArchetypeId = "grunt") {
+    this.archetype = archetype;
+    const a = Balance.archetypes[archetype];
+    this.a = a;
     this.fig = buildFigure("enemy");
-    this.hasGun = hasGun;
-    this.fig.pistol.visible = hasGun;
-    this.fig.sword.visible = !hasGun;
+    this.hasGun = a.ranged;
+    this.health = Balance.enemy.health * a.health;
+    this.speed = Balance.enemy.speed * a.speed;
+    this.windupTime = Balance.enemy.windupTime * (a.brute ? 1.4 : 1);
+    this.damageMult = a.damage;
+
+    this.fig.pistol.visible = a.ranged;
+    this.fig.sword.visible = !a.ranged;
+    this.fig.root.scale.setScalar(a.scale);
+
+    // shielded figures carry a slab shield on the left arm
+    if (a.shielded) {
+      const shield = new THREE.Mesh(
+        new THREE.BoxGeometry(0.12, 1.3, 0.9),
+        new THREE.MeshStandardMaterial({ color: 0x2a2724, roughness: 0.7, flatShading: true })
+      );
+      shield.position.set(0, -0.4, 0.1);
+      shield.castShadow = true;
+      this.fig.armL.add(shield);
+    }
+
     this.pos.copy(spawn);
     this.fig.root.position.copy(spawn);
     ctx.scene.add(this.fig.root);
@@ -44,22 +72,40 @@ export class Enemy {
     return this.fig.root;
   }
 
+  /** Melee damage this enemy deals to the player (archetype-scaled). */
+  get meleeDamage() {
+    return Balance.enemy.meleeDamage * this.damageMult;
+  }
+
   /** Center-of-mass world point for targeting / VFX. */
   center(out = new THREE.Vector3()) {
-    return out.copy(this.pos).add(new THREE.Vector3(0, 1.2, 0));
+    return out.copy(this.pos).add(new THREE.Vector3(0, 1.2 * this.a.scale, 0));
   }
 
   takeDamage(amount: number, from: THREE.Vector3) {
     if (!this.alive) return;
+
+    // shielded enemies shrug off damage until they're cracked open (staggered)
+    if (this.a.shielded && this.state !== "vulnerable") {
+      amount *= 0.15;
+      this.hitFlash = 0.1;
+      this.ctx.particles.hitSpark(this.center(), 0.4);
+      this.ctx.audio.block();
+      this.ctx.hud.floatText(this.center(), `[<span class="b">guarded</span>]`);
+      this.health -= amount;
+      if (this.health <= 0) this.die();
+      return;
+    }
+
     this.health -= amount;
     this.hitFlash = 0.15;
     this.ctx.particles.inkBurst(this.center(), 0.5);
     this.ctx.audio.hit();
     this.ctx.hitStop(Balance.feel.hitStop);
 
-    // knockback
+    // knockback (brutes barely budge)
     const dir = this.pos.clone().sub(from).setY(0).normalize();
-    this.vel.addScaledVector(dir, 3);
+    this.vel.addScaledVector(dir, this.a.brute ? 1 : 3);
 
     if (this.health <= 0) {
       this.die();
@@ -126,6 +172,15 @@ export class Enemy {
             this.fireRanged(playerPos);
           }
         } else if (dist > this.attackRange) {
+          // dashers periodically lunge to close the gap fast
+          if (this.a.dasher) {
+            this.lungeCooldown -= dt;
+            if (this.lungeCooldown <= 0 && dist < 11 && dist > 3) {
+              this.lungeCooldown = 1.6 + Math.random();
+              this.vel.addScaledVector(toPlayer, this.speed * 4);
+              this.ctx.particles.emberRise(this.center());
+            }
+          }
           this.vel.addScaledVector(toPlayer, this.speed * dt * 6);
           this.animateWalk(t);
         } else {

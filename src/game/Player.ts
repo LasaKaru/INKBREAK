@@ -4,7 +4,7 @@ import { GameContext, Targetable } from "./types";
 import { Enemy } from "./Enemy";
 import { Balance } from "./balance";
 import { Inventory } from "./Inventory";
-import { WeaponDef } from "./Weapons";
+import { WeaponDef, WEAPONS, ALL_WEAPON_IDS } from "./Weapons";
 
 const P = Balance.player;
 
@@ -18,10 +18,12 @@ export class Player {
   pos = new THREE.Vector3(0, 0, 10);
   vel = new THREE.Vector3();
   health: number = P.maxHealth;
+  maxHealth: number = P.maxHealth; // upgradable in the shop
   alive = true;
 
   // posture / stamina
   stamina: number = P.maxStamina;
+  maxStamina: number = P.maxStamina; // upgradable in the shop
   private staminaSpentAt = -10;
   private guardBrokenUntil = -10;
 
@@ -119,7 +121,7 @@ export class Player {
       if (sinceBlock < P.parryWindow) {
         // PERFECT parry -> counter (free, and refunds posture)
         enemy.stagger(Balance.enemy.staggerTime);
-        this.stamina = Math.min(P.maxStamina, this.stamina + P.staminaParryRefund);
+        this.stamina = Math.min(this.maxStamina, this.stamina + P.staminaParryRefund);
         this.ctx.hud.floatText(center, `[<span class="b">countered</span>] successful`, true);
         this.ctx.audio.counter();
         this.ctx.post.punchFlash(0.4);
@@ -138,7 +140,7 @@ export class Player {
       }
     } else {
       this.ctx.hud.floatText(center, `[<span class="b">hit</span>]`);
-      this.damage(P.hitDamage);
+      this.damage(enemy.meleeDamage);
       const dir = this.pos.clone().sub(enemy.pos).setY(0).normalize();
       this.vel.addScaledVector(dir, 5);
     }
@@ -252,14 +254,46 @@ export class Player {
       return;
     }
     if (type === "heal") {
-      this.health = Math.min(P.maxHealth, this.health + 40);
+      this.health = Math.min(this.maxHealth, this.health + 40);
       this.ctx.hud.setPlayerHealth(this.health);
       this.ctx.hud.floatText(this.chest(), `[<span class="b">+health</span>]`);
     } else {
-      this.stamina = Math.min(P.maxStamina, this.stamina + 60);
+      this.stamina = Math.min(this.maxStamina, this.stamina + 60);
       this.ctx.hud.floatText(this.chest(), `[<span class="b">+posture</span>]`);
     }
     this.ctx.audio.counter();
+  }
+
+  // ---------------- shop hooks ----------------
+
+  /** Spend ink (negative n refunds). Returns false if too poor. */
+  spendInk(n: number): boolean {
+    if (n < 0 || this.inventory.inkDrops >= n) {
+      this.inventory.addInk(-n);
+      return true;
+    }
+    return false;
+  }
+
+  /** Unlock a random not-yet-owned weapon; returns its name or null. */
+  unlockRandomWeapon(): string | null {
+    const owned = new Set([...this.inventory.ranged, ...this.inventory.melee]);
+    const choices = ALL_WEAPON_IDS.filter((id) => !owned.has(id));
+    if (choices.length === 0) return null;
+    const id = choices[Math.floor(Math.random() * choices.length)];
+    this.inventory.addWeapon(id);
+    return WEAPONS[id].name;
+  }
+
+  upgradeMaxHealth() {
+    this.maxHealth += 20;
+    this.health = this.maxHealth;
+    this.ctx.hud.setPlayerHealth(this.health);
+  }
+
+  upgradeMaxStamina() {
+    this.maxStamina += 20;
+    this.stamina = this.maxStamina;
   }
 
   private dash() {
@@ -359,9 +393,9 @@ export class Player {
       this.staminaSpentAt = this.time;
       if (this.stamina <= 0) this.guardBreak();
     } else if (this.time - this.staminaSpentAt > P.staminaRegenDelay) {
-      this.stamina = Math.min(P.maxStamina, this.stamina + P.staminaRegen * dt);
+      this.stamina = Math.min(this.maxStamina, this.stamina + P.staminaRegen * dt);
     }
-    this.ctx.hud.setStamina(this.stamina / P.maxStamina, this.guardBroken);
+    this.ctx.hud.setStamina(this.stamina / this.maxStamina, this.guardBroken);
 
     if (this.alive) {
       // ranged: auto weapons fire while held, others on click

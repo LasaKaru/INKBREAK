@@ -28,6 +28,10 @@ Legend — Effort: `S` ≤1 day · `M` a few days · `L` ~1–2 weeks · `XL` 3+
 - **v0.5 "Clean Ink"** — reworked posterized high-contrast B&W shader, brighter
   scene + lighter materials, and a full **Settings page** (live look tuning +
   presets + quality + volume, persisted) reachable from **title + pause menus**.
+- **v0.6 "Spend & Slay"** — **enemy archetypes** (brute / dasher / shielded
+  alongside grunt / gunner) with escalating wave composition, and a
+  **between-wave ink shop** (consumables, random new weapon, +max health/posture
+  upgrades) spending the ink-drop currency.
 
 ---
 

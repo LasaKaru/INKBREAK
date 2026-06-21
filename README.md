@@ -40,6 +40,20 @@ npm run preview
 | Inventory | `Tab` (pauses; click to equip) |
 | Pause | `Esc` (releases the mouse) |
 
+## v0.6 — "Spend & Slay"
+
+Combat variety and a purpose for all those ink drops:
+
+- **Enemy archetypes** (`src/game/balance.ts` + `Enemy.ts`): alongside the
+  **grunt** and ranged **gunner**, waves now mix in **brutes** (slow, huge,
+  hard-hitting, near-unflinching), **dashers** (fast, fragile, lunge to close
+  the gap), and **shielded** figures that shrug off damage frontally until you
+  **parry-stagger them open**. Composition escalates each wave.
+- **Between-wave ink shop** (`src/game/Shop.ts`): clear a wave and spend
+  ink-drop currency on heal vials, posture tonics, a random **new weapon**, or
+  permanent **+max health / +max posture** upgrades, then `[ continue ]` into
+  the next wave (or the final shop before the Warden).
+
 ## v0.5 — "Clean Ink"
 
 A visual overhaul toward crisp, high-contrast black-and-white, plus full
