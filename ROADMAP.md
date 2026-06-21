@@ -38,6 +38,9 @@ Legend — Effort: `S` ≤1 day · `M` a few days · `L` ~1–2 weeks · `XL` 3+
 - **v0.8 "Worlds"** — data-driven **level system**, **bigger ground**, four
   distinct worlds (Prison / Drowned Gallery / White Wastes / Ink Void), and a
   **world-select screen** (persisted).
+- **v0.9 "Break & Advance"** — **destructible cover** (crates block you, absorb
+  ink rounds, shatter into ink) and **campaign progression** (clear a world to
+  unlock the next; locked worlds in the select screen; persists).
 
 ---
 
@@ -48,8 +51,8 @@ Status: ✅ done · 🔜 next up · ⬜ todo · ⚙️ needs backend. Effort S/M
 ### World & Environment
 - ✅ Bigger ground / larger play area
 - ✅ Multiple worlds + world-select screen
-- 🔜 Destructible cover & props (crates, walls that shatter into ink) — M
-- ⬜ Hazards (ink pits, collapsing floor, spike traps) — M
+- ✅ Destructible cover & props (crates block you / absorb fire / shatter into ink)
+- 🔜 Hazards (ink pits, collapsing floor, spike traps) — M
 - ⬜ Interactive objects (levers, breakable cages release pickups) — M
 - ⬜ Weather / atmosphere layers (rain streaks, ink-fog banks, wind) — M
 - ⬜ Day/night or "page-aging" lighting shifts — M
@@ -57,8 +60,8 @@ Status: ✅ done · 🔜 next up · ⬜ todo · ⚙️ needs backend. Effort S/M
 
 ### Worlds / Levels / Progression
 - ✅ Level/location select
-- 🔜 Campaign progression (beat a world → unlock the next) — M
-- ⬜ Per-level objectives (survive N, defend point, hunt target) — M
+- ✅ Campaign progression (beat a world → unlock the next, persisted)
+- 🔜 Per-level objectives (survive N, defend point, hunt target) — M
 - ⬜ Hub world / sketchbook map between levels — L
 - ⬜ Endless & time-attack modes with scoring — M
 - ⬜ Daily seeded run — M

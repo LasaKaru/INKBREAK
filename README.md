@@ -40,6 +40,16 @@ npm run preview
 | Inventory | `Tab` (pauses; click to equip) |
 | Pause | `Esc` (releases the mouse) |
 
+## v0.9 — "Break & Advance"
+
+- **Destructible cover** (`src/game/Destructibles.ts`): crates scattered per
+  level that **block your movement** and **absorb enemy ink rounds** (real
+  cover), and **shatter into ink + debris** when hit by melee, finishers, or
+  sustained fire — dropping a little ink.
+- **Campaign progression**: clear a world (defeat its Warden) to **unlock the
+  next**. The world-select shows `[locked]` worlds; unlocks persist, and the
+  victory screen names the world that bleeds through next.
+
 ## v0.8 — "Worlds"
 
 - **Level system** (`src/game/Levels.ts`): the Arena + Environment are now

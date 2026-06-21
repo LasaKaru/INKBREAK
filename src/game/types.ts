@@ -39,4 +39,6 @@ export interface GameContext {
   summonEnemies: (n: number) => void;
   /** live accessor for the active boss, if any */
   getBoss: () => import("./Boss").Boss | null;
+  /** live accessor for destructible cover in the arena */
+  getDestructibles: () => import("./Destructibles").Destructibles;
 }

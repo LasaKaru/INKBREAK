@@ -263,6 +263,11 @@ export class Player {
       }
     }
 
+    // melee also smashes cover
+    const cover = this.ctx.getDestructibles();
+    if (finisher) cover.damageArea(this.pos, reach, dmg);
+    else cover.damageArea(this.pos.clone().addScaledVector(this.forward(), reach * 0.5), reach * 0.6, dmg);
+
     if (finisher && hitAny) {
       // ink-wave payoff: knockback, screen punch, style reward
       this.ctx.particles.inkBurst(this.chest(), 1.4);
@@ -470,6 +475,8 @@ export class Player {
       this.pos.x *= maxR / r2;
       this.pos.z *= maxR / r2;
     }
+    // push out of destructible cover
+    this.ctx.getDestructibles().resolveCollision(this.pos, 0.5);
     this.fig.root.position.copy(this.pos);
 
     // ---- targeting ----

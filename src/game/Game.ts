@@ -12,6 +12,7 @@ import { Pickups } from "./Pickups";
 import { Boss } from "./Boss";
 import { Settings, SettingsState } from "./Settings";
 import { Shop } from "./Shop";
+import { Destructibles } from "./Destructibles";
 import { LEVELS, LevelConfig, getLevel } from "./Levels";
 import { Balance } from "./balance";
 import { HUD } from "../ui/HUD";
@@ -39,7 +40,9 @@ export class Game {
 
   private arena!: Arena;
   private environment!: Environment;
+  private destructibles!: Destructibles;
   private currentLevel: LevelConfig = getLevel(localStorage.getItem("inkbreak.level") || "prison");
+  private unlocked: Set<string> = this.loadUnlocked();
   private sharks: Sharks;
   private voidSmoke: VoidSmoke;
   private player: Player;
@@ -117,6 +120,7 @@ export class Game {
       spawnLoot: (pos) => this.pickups.rollLoot(pos, this.enemies.wave),
       summonEnemies: (n) => this.enemies.summon(n),
       getBoss: () => this.boss,
+      getDestructibles: () => this.destructibles,
     };
 
     this.projectiles = new Projectiles(Balance.enemy.projectileSpeed);
@@ -262,14 +266,15 @@ export class Game {
   /** Populate the world-select overlay with cards for each level. */
   private buildLevelSelectUI() {
     const panel = document.getElementById("levelselect")!;
-    const cards = LEVELS.map(
-      (l) => `
-      <button class="lvl-card ${l.id === this.currentLevel.id ? "active" : ""}" data-id="${l.id}">
-        <span class="lvl-name">${l.name}</span>
+    const cards = LEVELS.map((l) => {
+      const locked = !this.unlocked.has(l.id);
+      return `
+      <button class="lvl-card ${l.id === this.currentLevel.id ? "active" : ""} ${locked ? "locked" : ""}" data-id="${l.id}" ${locked ? "data-locked=1" : ""}>
+        <span class="lvl-name">${l.name} ${locked ? '<span class="lvl-lock">[locked]</span>' : ""}</span>
         <span class="lvl-sub">${l.subtitle}</span>
-        <span class="lvl-blurb">${l.blurb}</span>
-      </button>`
-    ).join("");
+        <span class="lvl-blurb">${locked ? "clear the previous world to unlock." : l.blurb}</span>
+      </button>`;
+    }).join("");
     panel.innerHTML = `
       <div class="lvl-inner">
         <h2>[ choose a world ]</h2>
@@ -279,6 +284,7 @@ export class Game {
 
     panel.querySelectorAll<HTMLElement>(".lvl-card").forEach((el) => {
       el.addEventListener("click", () => {
+        if (el.dataset.locked) return; // can't pick a locked world
         this.selectLevel(el.dataset.id!);
         panel.querySelectorAll(".lvl-card").forEach((c) => c.classList.remove("active"));
         el.classList.add("active");
@@ -323,6 +329,37 @@ export class Game {
     }
   }
 
+  private loadUnlocked(): Set<string> {
+    try {
+      const r = localStorage.getItem("inkbreak.unlocked");
+      if (r) return new Set(JSON.parse(r));
+    } catch {
+      /* ignore */
+    }
+    return new Set([LEVELS[0].id]);
+  }
+
+  private saveUnlocked() {
+    try {
+      localStorage.setItem("inkbreak.unlocked", JSON.stringify([...this.unlocked]));
+    } catch {
+      /* ignore */
+    }
+  }
+
+  /** Mark the cleared level and unlock the next one; returns it (or null). */
+  private unlockNext(): LevelConfig | null {
+    const idx = LEVELS.findIndex((l) => l.id === this.currentLevel.id);
+    const next = LEVELS[idx + 1];
+    if (next && !this.unlocked.has(next.id)) {
+      this.unlocked.add(next.id);
+      this.saveUnlocked();
+      this.buildLevelSelectUI(); // reflect the unlock if the menu reopens
+      return next;
+    }
+    return null;
+  }
+
   /** (Re)build the arena + environment + atmosphere for a level. */
   private buildWorld(cfg: LevelConfig) {
     this.currentLevel = cfg;
@@ -339,6 +376,18 @@ export class Game {
     this.environment = new Environment(cfg);
     this.scene.add(this.environment.group);
 
+    if (this.destructibles) {
+      this.scene.remove(this.destructibles.group);
+      this.destructibles.dispose();
+    }
+    this.destructibles = new Destructibles(
+      { particles: this.particles, audio: this.audio },
+      cfg.crates,
+      cfg.boundary,
+      (pos) => this.pickups.spawn(pos, "ink", 2)
+    );
+    this.scene.add(this.destructibles.group);
+
     this.scene.background = new THREE.Color(cfg.bg);
     this.scene.fog = new THREE.Fog(cfg.bg, cfg.fogNear, cfg.fogFar);
     this.player.boundary = cfg.boundary;
@@ -349,7 +398,7 @@ export class Game {
 
   /** Pick a level/location (from the world-select screen). */
   private selectLevel(id: string) {
-    if (this.started) return;
+    if (this.started || !this.unlocked.has(id)) return;
     const cfg = getLevel(id);
     try {
       localStorage.setItem("inkbreak.level", cfg.id);
@@ -430,12 +479,21 @@ export class Game {
     this.gameOver = true;
     this.hud.hideBoss();
     this.hud.setPrisonIntegrity(0);
+    const next = this.unlockNext();
     this.hud.banner("the prison breaks", "[0%]");
-    this.hud.say(
-      "The prison stood firm at a perfect [100%]... until it didn't.",
-      "— and the page tore open.",
-      999
-    );
+    if (next) {
+      this.hud.say(
+        `${this.currentLevel.name} is broken. A new world bleeds through: ${next.name}.`,
+        "— reload to choose where the ink leads next.",
+        999
+      );
+    } else {
+      this.hud.say(
+        "The prison stood firm at a perfect [100%]... until it didn't.",
+        "— and the page tore open. every world, unmade.",
+        999
+      );
+    }
     this.post.punchFlash(0.9);
     document.exitPointerLock?.();
   }
@@ -496,7 +554,8 @@ export class Game {
         dt,
         this.player.pos,
         (dmg, from) => this.player.resolveProjectile(dmg, from),
-        (at) => this.particles.hitSpark(at, 0.5)
+        (at) => this.particles.hitSpark(at, 0.5),
+        (at) => this.destructibles.absorb(at, 20)
       );
       this.pickups.update(dt, t, this.player.pos);
 
@@ -527,6 +586,7 @@ export class Game {
 
     this.arena.update(dt, t);
     this.environment.update(dt, t);
+    this.destructibles.update(dt);
     this.sharks.update(dt, t);
     this.voidSmoke.update(dt, t);
     this.particles.update(dt);

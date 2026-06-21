@@ -54,13 +54,21 @@ export class Projectiles {
     dt: number,
     playerPos: THREE.Vector3,
     onHit: (damage: number, from: THREE.Vector3) => void,
-    onMiss?: (at: THREE.Vector3) => void
+    onMiss?: (at: THREE.Vector3) => void,
+    absorb?: (at: THREE.Vector3) => boolean
   ) {
     const playerCenter = playerPos.clone().add(new THREE.Vector3(0, 1.1, 0));
     for (const s of this.shots) {
       if (!s.active) continue;
       s.life -= dt;
       s.mesh.position.addScaledVector(s.vel, dt);
+
+      // cover blocks ink rounds
+      if (absorb && absorb(s.mesh.position)) {
+        onMiss?.(s.mesh.position.clone());
+        this.retire(s);
+        continue;
+      }
 
       if (s.mesh.position.distanceTo(playerCenter) < 0.9) {
         onHit(s.damage, s.mesh.position.clone());

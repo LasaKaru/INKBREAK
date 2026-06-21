@@ -738,6 +738,22 @@ body {
   box-shadow: inset 0 0 0 1px var(--ink);
 }
 
+.lvl-card.locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.lvl-card.locked:hover {
+  transform: none;
+  border-color: var(--gray);
+}
+
+.lvl-lock {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--gray);
+}
+
 .lvl-name {
   display: block;
   font-size: 20px;
