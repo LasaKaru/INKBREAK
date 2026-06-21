@@ -117,7 +117,7 @@ export class Hazards {
           fx.spark(playerPos.clone().setY(0.3), 0.5);
         }
         for (const e of enemies) {
-          if (e.alive && this.within(e.pos, pit.pos, pit.radius)) e.takeDamage(8, pit.pos);
+          if (e.alive && !e.isFlying && this.within(e.pos, pit.pos, pit.radius)) e.takeDamage(8, pit.pos);
         }
       }
       // subtle breathing of the pool
@@ -151,7 +151,7 @@ export class Hazards {
             fx.spark(playerPos.clone().setY(0.4), 1);
           }
           for (const e of enemies) {
-            if (e.alive && this.within(e.pos, sp.pos, sp.radius)) e.takeDamage(40, sp.pos);
+            if (e.alive && !e.isFlying && this.within(e.pos, sp.pos, sp.radius)) e.takeDamage(40, sp.pos);
           }
         }
         if (sp.timer <= 0) {

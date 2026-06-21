@@ -26,6 +26,7 @@ export class Enemy {
   private hitFlash = 0;
   private fireCooldown = Math.random() * Balance.enemy.rangedCooldown;
   private lungeCooldown = 1 + Math.random();
+  private summonTimer = 2.5 + Math.random() * 2;
   walkPhase = Math.random() * Math.PI * 2;
 
   readonly archetype: ArchetypeId;
@@ -77,9 +78,14 @@ export class Enemy {
     return Balance.enemy.meleeDamage * this.damageMult;
   }
 
+  get isFlying() {
+    return this.a.flying;
+  }
+
   /** Center-of-mass world point for targeting / VFX. */
   center(out = new THREE.Vector3()) {
-    return out.copy(this.pos).add(new THREE.Vector3(0, 1.2 * this.a.scale, 0));
+    const y = (this.a.flying ? 2.8 : 1.2) * this.a.scale;
+    return out.copy(this.pos).add(new THREE.Vector3(0, y, 0));
   }
 
   takeDamage(amount: number, from: THREE.Vector3) {
@@ -163,7 +169,18 @@ export class Enemy {
 
     switch (this.state) {
       case "approach": {
-        if (this.hasGun && dist < Balance.enemy.rangedFireRange && dist > 5) {
+        if (this.a.summoner && dist < Balance.enemy.rangedFireRange && dist > 7) {
+          // summoner: hang back and call in reinforcements
+          this.summonTimer -= dt;
+          this.fig.armR.rotation.x = THREE.MathUtils.lerp(this.fig.armR.rotation.x, -1.9, 1 - Math.exp(-dt * 8));
+          this.fig.armL.rotation.x = THREE.MathUtils.lerp(this.fig.armL.rotation.x, -1.9, 1 - Math.exp(-dt * 8));
+          if (this.summonTimer <= 0) {
+            this.summonTimer = 5.5 + Math.random() * 2.5;
+            this.ctx.summonEnemies(1 + (Math.random() < 0.4 ? 1 : 0));
+            this.ctx.particles.inkBurst(this.center(), 0.9);
+            this.ctx.hud.floatText(this.center(), `[<span class="b">summon</span>]`);
+          }
+        } else if (this.hasGun && dist < Balance.enemy.rangedFireRange && dist > 5) {
           // gunner: hold range and fire ink rounds
           this.fireCooldown -= dt;
           this.fig.armR.rotation.x = THREE.MathUtils.lerp(this.fig.armR.rotation.x, -1.4, 1 - Math.exp(-dt * 10));
@@ -185,19 +202,32 @@ export class Enemy {
           this.animateWalk(t);
         } else {
           this.state = "windup";
-          this.timer = this.windupTime;
-          this.ctx.hud.floatText(this.center(), `attack [<span class="b">incoming</span>]`);
+          // exploders prime a quick fuse instead of a normal swing
+          this.timer = this.a.exploder ? 0.45 : this.windupTime;
+          this.ctx.hud.floatText(
+            this.center(),
+            this.a.exploder ? `[<span class="b">priming</span>]` : `attack [<span class="b">incoming</span>]`
+          );
         }
         break;
       }
       case "windup": {
         this.timer -= dt;
-        // raise weapon as a telegraph
-        this.fig.armR.rotation.x = THREE.MathUtils.lerp(this.fig.armR.rotation.x, -2.2, 1 - Math.exp(-dt * 10));
+        if (this.a.exploder) {
+          // swell + pulse as the fuse burns
+          const p = 1 + (0.45 - this.timer) * 1.2;
+          this.fig.root.scale.setScalar(this.a.scale * p);
+        } else {
+          this.fig.armR.rotation.x = THREE.MathUtils.lerp(this.fig.armR.rotation.x, -2.2, 1 - Math.exp(-dt * 10));
+        }
         if (this.timer <= 0) {
-          this.state = "strike";
-          this.timer = 0.25;
-          this.resolveStrike(dist, playerBlocking);
+          if (this.a.exploder) {
+            this.detonate(dist);
+          } else {
+            this.state = "strike";
+            this.timer = 0.25;
+            this.resolveStrike(dist, playerBlocking);
+          }
         }
         break;
       }
@@ -228,12 +258,23 @@ export class Enemy {
     this.pos.y = 0;
     this.fig.root.position.x = this.pos.x;
     this.fig.root.position.z = this.pos.z;
+    // flyers hover above the ground, bobbing
+    this.fig.root.position.y = this.a.flying ? 1.6 + Math.sin(t * 2 + this.walkPhase) * 0.35 : 0;
 
     // hit flash tint
     const flash = this.hitFlash > 0 ? 1 : 0;
     for (const m of this.fig.materials) {
       m.emissive.setScalar(flash * 0.6);
     }
+  }
+
+  /** Exploder payoff: ink blast that hits the player if close, then dies. */
+  private detonate(dist: number) {
+    this.ctx.particles.inkBurst(this.center(), 2.2);
+    this.ctx.post.punchFlash(0.5);
+    this.ctx.hitStop(Balance.feel.hitStop);
+    if (dist < 3.6) Enemy.onStrike?.(this, false);
+    this.die();
   }
 
   /** Did the player block / counter this strike, or take the hit? */

@@ -58,10 +58,10 @@ export class EnemyManager {
   private rollArchetype(): ArchetypeId {
     const w = this.wave;
     const pool: ArchetypeId[] = ["grunt", "grunt"];
-    if (w > 1) pool.push("gunner");
-    if (w >= 2) pool.push("dasher");
-    if (w >= 2) pool.push("brute");
-    if (w >= 3) pool.push("shielded", "dasher");
+    if (w > 1) pool.push("gunner", "exploder");
+    if (w >= 2) pool.push("dasher", "brute", "flying");
+    if (w >= 3) pool.push("shielded", "dasher", "summoner");
+    if (w >= 4) pool.push("flying", "exploder");
     return pool[Math.floor(Math.random() * pool.length)];
   }
 

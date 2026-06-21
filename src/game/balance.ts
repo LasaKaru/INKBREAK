@@ -61,14 +61,17 @@ export const Balance = {
 
   /**
    * Enemy archetypes — stat multipliers + behaviour flags layered over the base
-   * `enemy` numbers. Keeps wave composition varied without new classes.
+   * `enemy` numbers. Every entry shares the same flag keys for a uniform shape.
    */
   archetypes: {
-    grunt: { health: 1.0, speed: 1.0, damage: 1.0, scale: 1.0, ranged: false, dasher: false, shielded: false, brute: false },
-    gunner: { health: 0.8, speed: 0.9, damage: 1.0, scale: 1.0, ranged: true, dasher: false, shielded: false, brute: false },
-    brute: { health: 2.6, speed: 0.55, damage: 1.7, scale: 1.5, ranged: false, dasher: false, shielded: false, brute: true },
-    dasher: { health: 0.5, speed: 1.7, damage: 0.9, scale: 0.85, ranged: false, dasher: true, shielded: false, brute: false },
-    shielded: { health: 1.5, speed: 0.8, damage: 1.1, scale: 1.12, ranged: false, dasher: false, shielded: true, brute: false },
+    grunt:    { health: 1.0, speed: 1.0, damage: 1.0, scale: 1.0,  ranged: false, dasher: false, shielded: false, brute: false, exploder: false, flying: false, summoner: false },
+    gunner:   { health: 0.8, speed: 0.9, damage: 1.0, scale: 1.0,  ranged: true,  dasher: false, shielded: false, brute: false, exploder: false, flying: false, summoner: false },
+    brute:    { health: 2.6, speed: 0.55, damage: 1.7, scale: 1.5, ranged: false, dasher: false, shielded: false, brute: true,  exploder: false, flying: false, summoner: false },
+    dasher:   { health: 0.5, speed: 1.7, damage: 0.9, scale: 0.85, ranged: false, dasher: true,  shielded: false, brute: false, exploder: false, flying: false, summoner: false },
+    shielded: { health: 1.5, speed: 0.8, damage: 1.1, scale: 1.12, ranged: false, dasher: false, shielded: true,  brute: false, exploder: false, flying: false, summoner: false },
+    exploder: { health: 0.5, speed: 1.35, damage: 2.4, scale: 0.95, ranged: false, dasher: false, shielded: false, brute: false, exploder: true, flying: false, summoner: false },
+    flying:   { health: 0.7, speed: 1.2, damage: 1.1, scale: 0.95, ranged: false, dasher: false, shielded: false, brute: false, exploder: false, flying: true,  summoner: false },
+    summoner: { health: 1.3, speed: 0.7, damage: 0.8, scale: 1.18, ranged: false, dasher: false, shielded: false, brute: false, exploder: false, flying: false, summoner: true },
   },
 
   shop: {

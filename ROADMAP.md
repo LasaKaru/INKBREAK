@@ -56,6 +56,9 @@ Legend — Effort: `S` ≤1 day · `M` a few days · `L` ~1–2 weeks · `XL` 3+
   to the next world keeping loadout/perks/ink), a **secret door** to the hidden
   **Ink Sanctum** (grants the legendary **Voidedge** blade), and powerful new
   weapons (**Ink Cannon**, **Railpen**, **Voidedge**).
+- **v0.15 "Swarm"** — three new enemy archetypes: **exploder** (fuse + ink
+  blast), **flying** (hovers, ignores ground hazards), and **summoner** (calls
+  reinforcements); wave pool now mixes all eight.
 
 ---
 
@@ -93,7 +96,7 @@ Status: ✅ done · 🔜 next up · ⬜ todo · ⚙️ needs backend. Effort S/M
 ### Enemies & AI
 - ✅ Ranged enemies (gunners), archetypes (brute/dasher/shielded), boss
 - 🔜 Pathfinding — navigate around props instead of pushing through — L
-- ⬜ More archetypes — exploder, flying, summoner — M
+- ✅ More archetypes — exploder, flying, summoner
 - ⬜ Spawn director — adaptive difficulty from player performance — M
 - ⬜ Ragdoll / death physics — M
 

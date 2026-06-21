@@ -40,6 +40,16 @@ npm run preview
 | Inventory | `Tab` (pauses; click to equip) |
 | Pause | `Esc` (releases the mouse) |
 
+## v0.15 — "Swarm" (more enemies)
+
+- **Exploder**: fragile rusher that primes a fuse and **detonates** in an ink
+  blast if it reaches you — back off or kill it early.
+- **Flying**: hovers above the ground (immune to pits/spikes), bobbing in to
+  strike — shoot it down or catch it on the swing.
+- **Summoner**: hangs back and **calls in reinforcements** on a timer — prioritize
+  it before the field fills up.
+- Wave composition now mixes all eight archetypes, escalating per wave.
+
 ## v0.14 — "The Long Page" (campaign + secrets)
 
 - **Continuous campaign**: defeat a world's Warden and you now **advance straight
