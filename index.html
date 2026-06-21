@@ -80,8 +80,8 @@
         <div id="controls-hint">
           <b>WASD</b> move &nbsp;·&nbsp; <b>L</b> shoot &nbsp;·&nbsp;
           <b>F</b> slash &nbsp;·&nbsp; <b>Space</b> block &nbsp;·&nbsp;
-          <b>Shift</b> dash &nbsp;·&nbsp; <b>Q/E</b> swap &nbsp;·&nbsp;
-          <b>Tab</b> inventory
+          <b>Shift</b> blade-dash &nbsp;·&nbsp; <b>Q/E</b> swap &nbsp;·&nbsp;
+          <b>Tab</b> inventory &nbsp;·&nbsp; <b>P</b> ink arts
         </div>
       </div>
 
@@ -113,6 +113,9 @@
       <!-- Between-wave ink shop -->
       <div id="shop" class="hidden"></div>
 
+      <!-- Ink Arts perk screen -->
+      <div id="perks" class="hidden"></div>
+
       <!-- Pause overlay -->
       <div id="pausecard" class="hidden">
         <div class="title-inner">
@@ -120,6 +123,7 @@
           <p class="flavor">the ink holds its breath.</p>
           <div class="menu-btns">
             <button id="resume-btn">[ resume ]</button>
+            <button id="pause-perks-btn" class="ghost">[ ink arts ]</button>
             <button id="pause-settings-btn" class="ghost">[ settings ]</button>
             <button id="restart-btn" class="ghost">[ restart ]</button>
           </div>

@@ -49,6 +49,9 @@ Legend — Effort: `S` ≤1 day · `M` a few days · `L` ~1–2 weeks · `XL` 3+
 - **v0.12 "Objectives"** — **interactive ink shrines** (shatter with the blade)
   and **per-level objectives** (clear all shrines to summon the Warden), with a
   HUD objective tracker and per-level boss-ready gating.
+- **v0.13 "Ink Arts"** — a **perk screen** (pause menu / `P`): spend ink on
+  stacking buffs (vigor, lifesteal, swiftness, melee/ranged power, dash cd,
+  ink gain), wired into combat as multipliers. Per run.
 
 ---
 
@@ -92,7 +95,7 @@ Status: ✅ done · 🔜 next up · ⬜ todo · ⚙️ needs backend. Effort S/M
 
 ### Player Systems
 - ✅ Inventory, currency & between-wave shop, +max health/posture upgrades
-- 🔜 Perks / skill tree (faster reload, lifesteal, more health) — M
+- ✅ Perks / skill tree — Ink Arts screen (per-run, ink-bought, stacking)
 - ⬜ Loadout screen — pick primary/secondary/perks before a run — M
 - ⬜ Leveling & XP, account/profile unlocks — M
 - ⬜ Classes (Assault / Medic / Sniper) with unique abilities — L

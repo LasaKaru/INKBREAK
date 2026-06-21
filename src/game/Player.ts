@@ -64,6 +64,14 @@ export class Player {
   // external movement slow (e.g. standing in an ink pit); 1 = normal
   externalSlow = 1;
 
+  // perk multipliers (raised by the Ink Arts perk screen)
+  meleeMult = 1;
+  rangedMult = 1;
+  speedMult = 1;
+  dashCdMult = 1;
+  lifesteal = 0; // health restored per melee/blade hit
+  inkMult = 1;
+
   constructor(private ctx: GameContext) {
     this.fig = buildFigure("player");
     this.fig.root.position.copy(this.pos);
@@ -88,7 +96,19 @@ export class Player {
   }
 
   private get speed() {
-    return P.moveSpeed;
+    return P.moveSpeed * this.speedMult;
+  }
+
+  /** Restore health (lifesteal / perks), clamped to max. */
+  heal(n: number) {
+    if (n <= 0 || !this.alive) return;
+    this.health = Math.min(this.maxHealth, this.health + n);
+    this.ctx.hud.setPlayerHealth(this.health);
+  }
+
+  /** Gain ink, scaled by the Ink Affinity perk. */
+  gainInk(n: number) {
+    this.inventory.addInk(Math.round(n * this.inkMult));
   }
 
   get guardBroken() {
@@ -204,14 +224,14 @@ export class Player {
         if (toE.dot(this.forward()) > 0.5) {
           // more pellets connect up close; damage falls off with distance
           const falloff = THREE.MathUtils.clamp(1 - d / range, 0.25, 1);
-          const dmg = w.damage * (w.pellets ?? 1) * falloff;
+          const dmg = w.damage * (w.pellets ?? 1) * falloff * this.rangedMult;
           e.takeDamage(dmg * (e.state === "vulnerable" ? w.vulnMult : 1), this.pos);
           hit = true;
         }
       }
       if (!hit) this.ctx.hud.floatText(this.chest(), `[scatter]`);
     } else if (target && target.alive) {
-      const dmg = w.damage * (target.state === "vulnerable" ? w.vulnMult : 1);
+      const dmg = w.damage * this.rangedMult * (target.state === "vulnerable" ? w.vulnMult : 1);
       target.takeDamage(dmg, this.pos);
       this.ctx.hud.floatText(target.center(), `[fired]`);
     }
@@ -239,7 +259,7 @@ export class Player {
     // finishers sweep a wider arc and hit everything around the player
     const reach = (w.reach ?? 3) * (finisher ? 1.7 : 1);
     const frontDot = finisher ? -0.6 : 0.2;
-    const dmg = w.damage * rampMult * (finisher ? 1.7 : 1);
+    const dmg = w.damage * rampMult * (finisher ? 1.7 : 1) * this.meleeMult;
 
     let hitAny = false;
     for (const e of this.ctx.getEnemies()) {
@@ -277,6 +297,8 @@ export class Player {
     const aoeR = finisher ? reach : reach * 0.6;
     cover.damageArea(aoe, aoeR, dmg);
     shrines.damageArea(aoe, aoeR, dmg);
+
+    if (hitAny) this.heal(this.lifesteal);
 
     if (finisher && hitAny) {
       // ink-wave payoff: knockback, screen punch, style reward
@@ -346,7 +368,7 @@ export class Player {
     }
     this.stamina -= P.staminaDashCost;
     this.staminaSpentAt = this.time;
-    this.dashCooldown = P.dashCooldown;
+    this.dashCooldown = P.dashCooldown * this.dashCdMult;
     this.invuln = P.dashInvuln;
     this.ctx.audio.dash();
     this.ctx.audio.slash();
@@ -377,8 +399,9 @@ export class Player {
           e.takeDamage(999, this.pos);
           this.ctx.hud.floatText(e.center(), `[<span class="b">execution</span>]`, true);
         } else {
-          e.takeDamage(w.damage * 1.3, this.pos);
+          e.takeDamage(w.damage * 1.3 * this.meleeMult, this.pos);
           this.ctx.particles.hitSpark(e.center(), 1.3);
+          this.heal(this.lifesteal);
         }
       }
     }

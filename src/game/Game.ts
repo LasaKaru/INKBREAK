@@ -12,6 +12,7 @@ import { Pickups } from "./Pickups";
 import { Boss } from "./Boss";
 import { Settings, SettingsState } from "./Settings";
 import { Shop } from "./Shop";
+import { Perks } from "./Perks";
 import { Destructibles } from "./Destructibles";
 import { Interactables } from "./Interactables";
 import { Hazards } from "./Hazards";
@@ -56,6 +57,8 @@ export class Game {
   private boss: Boss | null = null;
   private bossDefeated = false;
   private shop!: Shop;
+  private perks!: Perks;
+  private perksOpen = false;
   private ctx: GameContext;
 
   private prisonIntegrity = 100;
@@ -161,6 +164,16 @@ export class Game {
       () => this.closeShop()
     );
 
+    this.perks = new Perks(
+      {
+        getInk: () => this.player.inventory.inkDrops,
+        spend: (n) => this.player.spendInk(n),
+        player: this.player,
+        toast: (msg) => this.hud.banner(msg),
+      },
+      () => this.closePerks()
+    );
+
     // ---- settings (look / quality / volume) with live apply ----
     this.settings = new Settings((s) => this.applySettings(s));
     this.applySettings(this.settings.state);
@@ -218,7 +231,8 @@ export class Game {
         !this.input.pointerLocked &&
         !this.gameOver &&
         !this.paused &&
-        !this.settings.isOpen
+        !this.settings.isOpen &&
+        !this.perksOpen
       ) {
         this.input.requestLock();
       }
@@ -227,8 +241,8 @@ export class Game {
     // ---- pause handling: losing pointer lock mid-combat pauses ----
     document.addEventListener("pointerlockchange", () => {
       if (!this.started || this.gameOver) return;
-      // the inventory / settings / shop screens manage their own pause state
-      if (this.inventoryOpen || this.settings.isOpen || this.shop.isOpen) return;
+      // the inventory / settings / shop / perks screens manage their own pause
+      if (this.inventoryOpen || this.settings.isOpen || this.shop.isOpen || this.perksOpen) return;
       if (!this.input.pointerLocked) {
         this.paused = true;
         pausecard.classList.remove("hidden");
@@ -250,6 +264,9 @@ export class Game {
     document.getElementById("pause-settings-btn")!.addEventListener("click", () => {
       this.settings.show();
     });
+    document.getElementById("pause-perks-btn")!.addEventListener("click", () => {
+      this.openPerks(true);
+    });
 
     // ---- world select ----
     this.buildLevelSelectUI();
@@ -259,11 +276,15 @@ export class Game {
     const titleLevel = document.getElementById("title-level");
     if (titleLevel) titleLevel.textContent = this.currentLevel.name;
 
-    // ---- inventory toggle (Tab) ----
+    // ---- inventory (Tab) + perks (P) toggles ----
     window.addEventListener("keydown", (e) => {
       if (e.key === "Tab") {
         e.preventDefault();
         if (this.started && !this.gameOver && !this.settings.isOpen) this.toggleInventory();
+      }
+      if (e.key.toLowerCase() === "p") {
+        if (this.started && !this.gameOver && !this.paused && !this.perksOpen) this.openPerks(false);
+        else if (this.perksOpen && !this.perksReturnToPause) this.closePerks();
       }
     });
   }
@@ -530,6 +551,30 @@ export class Game {
     this.paused = false;
     this.input.requestLock();
     this.enemies.proceed();
+  }
+
+  private perksReturnToPause = false;
+
+  /** Open the Ink Arts perk screen. */
+  private openPerks(fromPause: boolean) {
+    if (!this.started || this.gameOver) return;
+    this.perksReturnToPause = fromPause;
+    if (fromPause) document.getElementById("pausecard")!.classList.add("hidden");
+    this.paused = true;
+    this.perksOpen = true;
+    document.exitPointerLock?.();
+    this.perks.show();
+  }
+
+  private closePerks() {
+    this.perks.hide();
+    this.perksOpen = false;
+    if (this.perksReturnToPause) {
+      document.getElementById("pausecard")!.classList.remove("hidden");
+    } else {
+      this.paused = false;
+      this.input.requestLock();
+    }
   }
 
   /** The prison wakes: spawn the Warden boss. */

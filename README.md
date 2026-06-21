@@ -40,6 +40,16 @@ npm run preview
 | Inventory | `Tab` (pauses; click to equip) |
 | Pause | `Esc` (releases the mouse) |
 
+## v0.13 — "Ink Arts" (perks)
+
+- **Perk screen** (`src/game/Perks.ts`) reachable from the pause menu
+  (`[ ink arts ]`) or the **`P`** key: spend ink on lasting, stacking buffs —
+  Vigor, Endurance, Swiftness, Sharpened Ink (melee), Steady Hand (ranged),
+  **Bloodletting** (lifesteal), Quickstep (dash cooldown), Ink Affinity (more
+  ink). Costs rise per rank; perks last the run.
+- Player gains perk multipliers wired into melee / ranged / blade-dash damage,
+  move speed, dash cooldown, lifesteal healing, and ink gains.
+
 ## v0.12 — "Objectives"
 
 - **Interactive ink shrines** (`src/game/Interactables.ts`): obelisks with a
