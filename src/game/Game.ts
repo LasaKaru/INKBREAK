@@ -19,6 +19,7 @@ import { Hazards } from "./Hazards";
 import { LEVELS, SELECTABLE_LEVELS, LevelConfig, getLevel, nextLevel } from "./Levels";
 import { Balance } from "./balance";
 import { HUD } from "../ui/HUD";
+import { Minimap, Blip } from "../ui/Minimap";
 import { Audio } from "../audio/Audio";
 import { Postprocessing } from "../render/Postprocessing";
 import { GameContext } from "./types";
@@ -37,6 +38,7 @@ export class Game {
   private input: Input;
   private particles: Particles;
   private hud: HUD;
+  private minimap: Minimap;
   private audio: Audio;
   private post: Postprocessing;
   private settings!: Settings;
@@ -105,6 +107,7 @@ export class Game {
     this.particles = new Particles();
     this.scene.add(this.particles.points);
     this.hud = new HUD(this.camera);
+    this.minimap = new Minimap();
     this.audio = new Audio();
     this.post = new Postprocessing(this.renderer, this.scene, this.camera);
 
@@ -582,6 +585,28 @@ export class Game {
     }
   }
 
+  /** Feed the corner radar with the current world's blips. */
+  private updateMinimap() {
+    const blips: Blip[] = [];
+    for (const e of this.enemies.enemies) {
+      if (e.alive) blips.push({ x: e.pos.x, z: e.pos.z, kind: e.isFlying ? "flyer" : "enemy" });
+    }
+    if (this.boss && this.boss.alive) blips.push({ x: 0, z: 0, kind: "boss" });
+    for (const s of this.interactables.shrines) {
+      if (s.alive) blips.push({ x: s.pos.x, z: s.pos.z, kind: "shrine" });
+    }
+    if (this.secretDoor) {
+      blips.push({ x: this.secretDoorPos.x, z: this.secretDoorPos.z, kind: "door" });
+    }
+    this.minimap.update(
+      this.player.pos.x,
+      this.player.pos.z,
+      this.player.fig.root.rotation.y,
+      blips,
+      this.currentLevel.boundary + 8
+    );
+  }
+
   /** Update the objective line in the HUD for the current world state. */
   private refreshObjective() {
     if (this.gameOver) return this.hud.setObjective("");
@@ -842,6 +867,7 @@ export class Game {
     this.voidSmoke.update(dt, t);
     this.particles.update(dt);
     this.hud.update(dt);
+    if (!this.gameOver) this.updateMinimap();
     this.post.update(dt, t);
 
     this.input.endFrame();

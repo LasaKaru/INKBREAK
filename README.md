@@ -40,6 +40,13 @@ npm run preview
 | Inventory | `Tab` (pauses; click to equip) |
 | Pause | `Esc` (releases the mouse) |
 
+## v0.16 — "Radar"
+
+- **Corner minimap** (`src/ui/Minimap.ts`): a player-centred, north-up radar that
+  plots **enemies** (hollow = airborne flyers), the **boss**, **ink shrines**, and
+  the **secret door** — invaluable for the bigger worlds and for hunting the
+  hidden door. Pure monochrome 2D canvas to match the cartoon look.
+
 ## v0.15 — "Swarm" (more enemies)
 
 - **Exploder**: fragile rusher that primes a fuse and **detonates** in an ink

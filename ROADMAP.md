@@ -59,6 +59,8 @@ Legend — Effort: `S` ≤1 day · `M` a few days · `L` ~1–2 weeks · `XL` 3+
 - **v0.15 "Swarm"** — three new enemy archetypes: **exploder** (fuse + ink
   blast), **flying** (hovers, ignores ground hazards), and **summoner** (calls
   reinforcements); wave pool now mixes all eight.
+- **v0.16 "Radar"** — a corner **minimap** plotting enemies (hollow=flyers),
+  the boss, shrines and the secret door; player-centred, monochrome canvas.
 
 ---
 
@@ -129,7 +131,7 @@ Status: ✅ done · 🔜 next up · ⬜ todo · ⚙️ needs backend. Effort S/M
 
 ### UI / UX
 - ✅ Settings menu (look/quality/volume), pause + menus, flow/boss HUD
-- 🔜 Minimap / radar — enemy blips, objectives, pickups — M
+- ✅ Minimap / radar — enemies (flyers hollow), boss, shrines, secret door
 - ⬜ FOV slider + mouse sensitivity in settings — S
 - ⬜ Key rebinding + gamepad support — M
 - ⬜ Objective markers & compass — S
