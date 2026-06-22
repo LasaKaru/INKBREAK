@@ -2,10 +2,13 @@
  * Tiny procedural sound engine (WebAudio). Synthesizes all SFX so the game
  * needs no audio files. Dark, percussive, lo-fi tones that suit the ink mood.
  */
+import { Music } from "./Music";
+
 export class Audio {
   private ctx: AudioContext | null = null;
   private master!: GainNode;
   enabled = true;
+  music: Music | null = null;
 
   private volume = 0.6;
 
@@ -15,6 +18,18 @@ export class Audio {
     this.master = this.ctx.createGain();
     this.master.gain.value = this.volume;
     this.master.connect(this.ctx.destination);
+    // dedicated, slightly quieter bus for the score
+    const musicBus = this.ctx.createGain();
+    musicBus.gain.value = 0.55;
+    musicBus.connect(this.master);
+    this.music = new Music(this.ctx, musicBus);
+  }
+
+  startMusic() {
+    this.music?.start();
+  }
+  setMusicIntensity(x: number) {
+    this.music?.setIntensity(x);
   }
 
   setVolume(v: number) {

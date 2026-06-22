@@ -61,6 +61,9 @@ Legend — Effort: `S` ≤1 day · `M` a few days · `L` ~1–2 weeks · `XL` 3+
   reinforcements); wave pool now mixes all eight.
 - **v0.16 "Radar"** — a corner **minimap** plotting enemies (hollow=flyers),
   the boss, shrines and the secret door; player-centred, monochrome canvas.
+- **v0.17 "Score"** — **procedural dynamic music** (synthesized) whose
+  intensity (tempo/layers/volume) swells with on-screen threat and peaks at the
+  boss; rides the volume slider.
 
 ---
 
@@ -140,7 +143,7 @@ Status: ✅ done · 🔜 next up · ⬜ todo · ⚙️ needs backend. Effort S/M
 
 ### Audio & Music
 - ✅ Procedural SFX + master volume
-- 🔜 Music — menu + dynamic combat tracks that escalate with waves — M
+- ✅ Music — procedural dynamic score that escalates with threat / boss
 - ⬜ Ambient soundscape (wind, distant noise) — S
 - ⬜ Spatial/3D positional audio — M
 - ⬜ Voice lines / announcer ("wave incoming", streaks) — S

@@ -40,6 +40,15 @@ npm run preview
 | Inventory | `Tab` (pauses; click to equip) |
 | Pause | `Esc` (releases the mouse) |
 
+## v0.17 — "Score" (dynamic music)
+
+- **Procedural music** (`src/audio/Music.ts`): a synthesized, self-scheduling
+  score on the same WebAudio context — dark minor bass, arpeggio, percussion and
+  a boss-tier high pad. A single **intensity** drives tempo / layering / volume,
+  and the game ramps it with the **threat on screen**: calm exploring → swelling
+  with each living enemy → full intensity during the **Warden**. No audio files;
+  rides the **volume** slider.
+
 ## v0.16 — "Radar"
 
 - **Corner minimap** (`src/ui/Minimap.ts`): a player-centred, north-up radar that

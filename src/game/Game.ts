@@ -228,6 +228,7 @@ export class Game {
     const btn = document.getElementById("start-btn")!;
     btn.addEventListener("click", () => {
       this.audio.init();
+      this.audio.startMusic();
       titlecard.classList.add("hidden");
       this.input.requestLock();
       this.beginIntro();
@@ -867,7 +868,19 @@ export class Game {
     this.voidSmoke.update(dt, t);
     this.particles.update(dt);
     this.hud.update(dt);
-    if (!this.gameOver) this.updateMinimap();
+    if (!this.gameOver) {
+      this.updateMinimap();
+      // music swells with the threat on screen
+      let mi = 0.3;
+      if (this.boss && this.boss.alive) mi = 1.0;
+      else {
+        const live = this.enemies.livingCount;
+        mi = live > 0 ? Math.min(0.9, 0.45 + live * 0.06) : 0.3;
+      }
+      this.audio.setMusicIntensity(mi);
+    } else {
+      this.audio.setMusicIntensity(0.16);
+    }
     this.post.update(dt, t);
 
     this.input.endFrame();
