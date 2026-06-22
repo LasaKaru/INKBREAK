@@ -64,6 +64,9 @@ Legend — Effort: `S` ≤1 day · `M` a few days · `L` ~1–2 weeks · `XL` 3+
 - **v0.17 "Score"** — **procedural dynamic music** (synthesized) whose
   intensity (tempo/layers/volume) swells with on-screen threat and peaks at the
   boss; rides the volume slider.
+- **v0.18 "Spectrum"** — **colour mode** toggle (Ink B&W vs full Colour) via a
+  central Palette + a colour cel path in the shader; archetype-coloured enemies,
+  hued world, live re-tint.
 
 ---
 
@@ -124,6 +127,7 @@ Status: ✅ done · 🔜 next up · ⬜ todo · ⚙️ needs backend. Effort S/M
 
 ### "More Realistic" / Visual Fidelity
 - ✅ Sketch/ink post FX, posterize, vignette, grain (live-tunable)
+- ✅ Colour mode — Ink (B&W) vs full-colour cel palette toggle in settings
 - 🔜 Post-processing: bloom, SSAO, motion blur, color grading — M
 - ⬜ PBR materials (textures, normal/roughness maps) — M
 - ⬜ Skeletal animations — rigged glTF characters/enemies — L

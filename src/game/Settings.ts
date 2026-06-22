@@ -14,6 +14,7 @@ export interface SettingsState {
   vignette: number;
   quality: "low" | "medium" | "high";
   volume: number;
+  color: "ink" | "color";
 }
 
 export const PRESETS: Record<string, Partial<SettingsState>> = {
@@ -29,6 +30,7 @@ const DEFAULTS: SettingsState = {
   ...PRESETS.cartoon,
   quality: "high",
   volume: 0.6,
+  color: "ink",
 } as SettingsState;
 
 const STORAGE_KEY = "inkbreak.settings.v2"; // bumped: default look is now "cartoon"
@@ -122,6 +124,13 @@ export class Settings {
           ${sliderRows}
         </div>
         <div class="set-group">
+          <h3>palette</h3>
+          <div class="set-quality">
+            <button class="set-color" data-color="ink">ink (b&amp;w)</button>
+            <button class="set-color" data-color="color">colour</button>
+          </div>
+        </div>
+        <div class="set-group">
           <h3>quality</h3>
           <div class="set-quality">
             <button class="set-q" data-q="low">low</button>
@@ -160,6 +169,15 @@ export class Settings {
       });
     });
 
+    // palette (colour mode)
+    this.panel.querySelectorAll<HTMLElement>(".set-color").forEach((el) => {
+      el.addEventListener("click", () => {
+        this.state.color = el.dataset.color as SettingsState["color"];
+        this.commit();
+        this.refreshControls();
+      });
+    });
+
     document.getElementById("set-reset")!.addEventListener("click", () => {
       this.state = { ...DEFAULTS };
       this.commit();
@@ -187,6 +205,9 @@ export class Settings {
     });
     this.panel.querySelectorAll<HTMLElement>(".set-q").forEach((el) => {
       el.classList.toggle("active", el.dataset.q === this.state.quality);
+    });
+    this.panel.querySelectorAll<HTMLElement>(".set-color").forEach((el) => {
+      el.classList.toggle("active", el.dataset.color === this.state.color);
     });
     this.panel.querySelectorAll<HTMLElement>(".set-preset").forEach((el) => {
       el.classList.toggle("active", el.dataset.preset === this.state.preset);

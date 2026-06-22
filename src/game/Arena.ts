@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { LevelConfig } from "./Levels";
+import { Palette } from "./Palette";
 
 /**
  * The grand, crumbling hall: tiled floor, instanced pillars, hanging birdcages,
@@ -42,7 +43,7 @@ export class Arena {
       pos.setY(i, Math.sin(x * 0.4) * 0.03 + Math.cos(z * 0.5) * 0.03);
     }
     geo.computeVertexNormals();
-    const floor = new THREE.Mesh(geo, this.mat(this.cfg.floorColor, 1));
+    const floor = new THREE.Mesh(geo, this.mat(Palette.pick(this.cfg.floorColor, 0xc7b48c), 1));
     floor.receiveShadow = true;
     this.group.add(floor);
 
@@ -59,7 +60,7 @@ export class Arena {
     const count = this.cfg.pillarCount;
     const ringR = this.cfg.pillarRing;
     const geo = new THREE.CylinderGeometry(0.9, 1.1, 16, 8);
-    const inst = new THREE.InstancedMesh(geo, this.mat(this.cfg.pillarColor), count);
+    const inst = new THREE.InstancedMesh(geo, this.mat(Palette.pick(this.cfg.pillarColor, 0xcdc6b0)), count);
     inst.castShadow = true;
     inst.receiveShadow = true;
     const m = new THREE.Matrix4();
@@ -75,7 +76,7 @@ export class Arena {
 
     // capitals on top of pillars
     const capGeo = new THREE.BoxGeometry(2.6, 0.7, 2.6);
-    const capInst = new THREE.InstancedMesh(capGeo, this.mat(this.cfg.pillarColor), count);
+    const capInst = new THREE.InstancedMesh(capGeo, this.mat(Palette.pick(this.cfg.pillarColor, 0xcdc6b0)), count);
     capInst.castShadow = true;
     for (let i = 0; i < count; i++) {
       const a = (i / count) * Math.PI * 2;
@@ -145,7 +146,7 @@ export class Arena {
     // stepped altar base
     for (let i = 0; i < 4; i++) {
       const s = 7 - i * 1.4;
-      const step = new THREE.Mesh(new THREE.BoxGeometry(s, 0.5, s), this.mat(0xd0cdc6));
+      const step = new THREE.Mesh(new THREE.BoxGeometry(s, 0.5, s), this.mat(Palette.pick(0xd0cdc6, 0xc2bba6)));
       step.position.y = 0.25 + i * 0.5;
       step.castShadow = true;
       step.receiveShadow = true;
@@ -180,7 +181,7 @@ export class Arena {
   private buildWalls() {
     // A ruined outer colonnade with gaps — the hall is broken open so the ink
     // lake, the standing stones and the mountains beyond are all visible.
-    const stone = this.mat(this.cfg.wallColor);
+    const stone = this.mat(Palette.pick(this.cfg.wallColor, 0xbfb79f));
     const ringR = this.cfg.wallRing;
     const count = 16;
     for (let i = 0; i < count; i++) {

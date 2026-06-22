@@ -1214,7 +1214,8 @@ body {
 }
 
 .set-preset,
-.set-q {
+.set-q,
+.set-color {
   flex: 1;
   min-width: 80px;
   background: transparent;
@@ -1229,12 +1230,14 @@ body {
 }
 
 .set-preset:hover,
-.set-q:hover {
+.set-q:hover,
+.set-color:hover {
   border-color: var(--ink);
 }
 
 .set-preset.active,
-.set-q.active {
+.set-q.active,
+.set-color.active {
   background: var(--ink);
   color: var(--paper);
   border-color: var(--ink);

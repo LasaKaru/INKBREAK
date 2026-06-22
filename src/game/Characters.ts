@@ -18,6 +18,9 @@ export interface Figure {
   pistol: THREE.Group;
   sword: THREE.Group;
   materials: THREE.MeshStandardMaterial[];
+  bodyMat: THREE.MeshStandardMaterial;
+  limbMat: THREE.MeshStandardMaterial;
+  headMat: THREE.MeshStandardMaterial;
 }
 
 const SUIT_BLACK = 0x161311;
@@ -162,5 +165,8 @@ export function buildFigure(kind: "player" | "enemy"): Figure {
     pistol,
     sword,
     materials,
+    bodyMat,
+    limbMat,
+    headMat,
   };
 }

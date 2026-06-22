@@ -40,6 +40,17 @@ npm run preview
 | Inventory | `Tab` (pauses; click to equip) |
 | Pause | `Esc` (releases the mouse) |
 
+## v0.18 — "Spectrum" (colour mode)
+
+- **Palette setting** (Settings → palette): switch between **Ink (B&W)** and full
+  **Colour**. A central `Palette` (`src/game/Palette.ts`) drives every material,
+  and the ink shader gained a **colour cel path** that posterizes hue into flat
+  cartoon bands (keeping the bold outlines) instead of crushing to grayscale.
+- In colour mode the world gains hues — navy figure, **archetype-coloured
+  enemies** (green grunt, red gunner, orange brute, cyan dasher, purple shield,
+  pink exploder, yellow flyer, blue summoner), warm floors, blue ink-water, slate
+  mountains, soft-blue sky. Toggling re-tints the world live.
+
 ## v0.17 — "Score" (dynamic music)
 
 - **Procedural music** (`src/audio/Music.ts`): a synthesized, self-scheduling

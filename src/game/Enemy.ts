@@ -2,6 +2,18 @@ import * as THREE from "three";
 import { buildFigure, Figure } from "./Characters";
 import { GameContext } from "./types";
 import { Balance } from "./balance";
+import { Palette } from "./Palette";
+
+const ARCHETYPE_HUE: Record<string, number> = {
+  grunt: 0x6fae5a,
+  gunner: 0xc0584e,
+  brute: 0xc98a3e,
+  dasher: 0x57b0c2,
+  shielded: 0x8d7bc0,
+  exploder: 0xcf5a8a,
+  flying: 0xd9c558,
+  summoner: 0x5566c9,
+};
 
 export type EnemyState = "approach" | "windup" | "strike" | "vulnerable" | "dead";
 export type ArchetypeId = keyof typeof Balance.archetypes;
@@ -67,6 +79,15 @@ export class Enemy {
     this.pos.copy(spawn);
     this.fig.root.position.copy(spawn);
     ctx.scene.add(this.fig.root);
+    this.applyPalette();
+  }
+
+  /** Recolour for the current palette: white in ink mode, archetype hue in colour. */
+  applyPalette() {
+    const hue = ARCHETYPE_HUE[this.archetype] ?? 0xb05050;
+    this.fig.bodyMat.color.setHex(Palette.pick(0xdedcd5, hue));
+    this.fig.limbMat.color.setHex(Palette.pick(0x9b9892, hue));
+    this.fig.headMat.color.setHex(Palette.pick(0xdedcd5, 0xf2efe8));
   }
 
   get group() {

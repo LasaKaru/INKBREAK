@@ -39,6 +39,11 @@ export class Postprocessing {
     this.flashTarget = Math.max(this.flashTarget, amount);
   }
 
+  /** Toggle the colour cel path (vs monochrome ink). */
+  setColorMode(on: boolean) {
+    this.sketchPass.uniforms.colorMode.value = on ? 1 : 0;
+  }
+
   /** Apply art-direction look values from Settings. */
   setLook(o: {
     contrast: number;

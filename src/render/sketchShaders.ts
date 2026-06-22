@@ -26,6 +26,7 @@ export const SketchShader = {
     contrast: { value: 1.5 },
     brightness: { value: 1.12 },
     levels: { value: 4.0 },
+    colorMode: { value: 0.0 }, // 0 = monochrome ink, 1 = cel-shaded colour
     inkColor: { value: [0.03, 0.03, 0.03] as [number, number, number] },
     paperColor: { value: [0.99, 0.99, 0.985] as [number, number, number] },
     flash: { value: 0.0 }, // white impact flash, briefly raised on hits
@@ -53,6 +54,7 @@ export const SketchShader = {
     uniform float contrast;
     uniform float brightness;
     uniform float levels;
+    uniform float colorMode;
     uniform vec3 inkColor;
     uniform vec3 paperColor;
     uniform float flash;
@@ -122,10 +124,17 @@ export const SketchShader = {
         shade = clamp(shade * hatchStrength, 0.0, 1.0);
       }
 
-      // clean grayscale: paper at the bright end, ink at the dark end
-      vec3 col = mix(inkColor, paperColor, tone);
+      // monochrome ink: paper at the bright end, ink at the dark end
+      vec3 inkCol = mix(inkColor, paperColor, tone);
+      // colour: per-channel brightness/contrast then posterize -> flat cartoon
+      vec3 cc = base * brightness;
+      cc = (cc - 0.5) * contrast + 0.5;
+      cc = clamp(cc, 0.0, 1.0);
+      cc = floor(cc * lv + 0.5) / lv;
+      vec3 col = mix(inkCol, cc, colorMode);
+
       col = mix(col, inkColor, shade);
-      col = mix(col, inkColor, edge); // crisp outline on top
+      col = mix(col, inkColor, edge); // crisp outline on top, both modes
 
       // --- animated grain (subtle) ---
       if (grainStrength > 0.001) {

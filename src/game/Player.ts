@@ -5,6 +5,7 @@ import { Enemy } from "./Enemy";
 import { Balance } from "./balance";
 import { Inventory } from "./Inventory";
 import { WeaponDef, WEAPONS, ALL_WEAPON_IDS } from "./Weapons";
+import { Palette } from "./Palette";
 
 const P = Balance.player;
 
@@ -84,6 +85,14 @@ export class Player {
     // refresh visuals + HUD whenever the loadout changes
     this.inventory.onChange = () => this.refreshLoadout();
     this.refreshLoadout();
+    this.recolor();
+  }
+
+  /** Recolour the figure for the current palette mode (ink vs colour). */
+  recolor() {
+    this.fig.bodyMat.color.setHex(Palette.pick(0x161311, 0x27306a));
+    this.fig.limbMat.color.setHex(Palette.pick(0x2c2825, 0x343f86));
+    this.fig.headMat.color.setHex(Palette.pick(0xf2f0ea, 0xf0d6bb));
   }
 
   /** Apply equipped-weapon visuals + push loadout strings to the HUD. */

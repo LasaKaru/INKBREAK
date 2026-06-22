@@ -17,6 +17,7 @@ import { Destructibles } from "./Destructibles";
 import { Interactables } from "./Interactables";
 import { Hazards } from "./Hazards";
 import { LEVELS, SELECTABLE_LEVELS, LevelConfig, getLevel, nextLevel } from "./Levels";
+import { Palette } from "./Palette";
 import { Balance } from "./balance";
 import { HUD } from "../ui/HUD";
 import { Minimap, Blip } from "../ui/Minimap";
@@ -337,6 +338,18 @@ export class Game {
   private applySettings(s: SettingsState) {
     this.post.setLook(s);
     this.audio.setVolume(s.volume);
+
+    // colour vs ink palette — recolour the world + actors if it changed
+    const mode = s.color === "color" ? "color" : "ink";
+    const changed = Palette.mode !== mode;
+    Palette.mode = mode;
+    this.post.setColorMode(mode === "color");
+    if (changed && this.arena) {
+      this.buildWorld(this.currentLevel);
+      this.player.recolor();
+      for (const e of this.enemies.enemies) e.applyPalette();
+    }
+
     if (s.quality === "low") {
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
       this.renderer.shadowMap.enabled = false;
@@ -459,8 +472,9 @@ export class Game {
         : this.enemies.wave >= cfg.wavesBeforeBoss;
     this.refreshObjective();
 
-    this.scene.background = new THREE.Color(cfg.bg);
-    this.scene.fog = new THREE.Fog(cfg.bg, cfg.fogNear, cfg.fogFar);
+    const bg = Palette.pick(cfg.bg, 0xdfeaf2);
+    this.scene.background = new THREE.Color(bg);
+    this.scene.fog = new THREE.Fog(bg, cfg.fogNear, cfg.fogFar);
     this.player.boundary = cfg.boundary;
     this.enemies.wavesBeforeBoss = cfg.wavesBeforeBoss;
 

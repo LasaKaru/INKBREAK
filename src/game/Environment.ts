@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { LevelConfig } from "./Levels";
+import { Palette } from "./Palette";
 
 /**
  * The surreal monochrome landscape surrounding the hall, glimpsed through its
@@ -32,8 +33,8 @@ export class Environment {
       fog: true,
       uniforms: {
         time: { value: 0 },
-        deep: { value: new THREE.Color(0x23211e) },
-        crest: { value: new THREE.Color(0xb9b6af) },
+        deep: { value: new THREE.Color(Palette.pick(0x23211e, 0x1f3a55)) },
+        crest: { value: new THREE.Color(Palette.pick(0xb9b6af, 0x7fa6c8)) },
         ...THREE.UniformsLib.fog,
       },
       vertexShader: /* glsl */ `
@@ -117,8 +118,8 @@ export class Environment {
       }
     };
     const base = this.cfg.floorSize * 0.55;
-    make(base * 1.5, 26, 30, 70, 0xcac7c0); // far range
-    make(base, 20, 18, 42, 0xa8a59e); // near range
+    make(base * 1.5, 26, 30, 70, Palette.pick(0xcac7c0, 0x9aa6b4)); // far range
+    make(base, 20, 18, 42, Palette.pick(0xa8a59e, 0x7c8696)); // near range
   }
 
   // ---------------- monoliths in the lake ----------------
@@ -137,7 +138,7 @@ export class Environment {
     }
     geo.computeVertexNormals();
 
-    const inst = new THREE.InstancedMesh(geo, this.mat(0x86837d), count);
+    const inst = new THREE.InstancedMesh(geo, this.mat(Palette.pick(0x86837d, 0x6f7480)), count);
     inst.castShadow = true;
     const m = new THREE.Matrix4();
     const q = new THREE.Quaternion();
@@ -162,7 +163,7 @@ export class Environment {
     const count = this.cfg.shoreStones;
     if (count <= 0) return;
     const geo = new THREE.DodecahedronGeometry(1, 0);
-    const inst = new THREE.InstancedMesh(geo, this.mat(0xc2bfb8), count);
+    const inst = new THREE.InstancedMesh(geo, this.mat(Palette.pick(0xc2bfb8, 0xb6a487)), count);
     inst.castShadow = true;
     inst.receiveShadow = true;
     const m = new THREE.Matrix4();
